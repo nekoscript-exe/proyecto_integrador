@@ -1,0 +1,155 @@
+<svg width="1200" height="700" viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+
+  <style>
+    .title{
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      fill: #f8fafc;
+      font-weight: bold;
+    }
+
+    .subtitle{
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      fill: #94a3b8;
+    }
+
+    .header{
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      fill: white;
+      font-weight: bold;
+    }
+
+    .text{
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      fill: #cbd5e1;
+    }
+
+    .line{
+      stroke:#60a5fa;
+      stroke-width:2;
+      fill:none;
+      marker-end:url(#arrow);
+    }
+  </style>
+
+  <!-- Fondo -->
+  <rect width="1200" height="700" fill="#0f172a"/>
+
+  <!-- Título -->
+  <text x="40" y="50" class="title">ATENEA - Academic Risk Analysis Platform</text>
+  <text x="40" y="75" class="subtitle">
+    Student monitoring, academic analytics and early risk detection
+  </text>
+
+  <!-- STUDENTS -->
+  <rect x="40" y="120" width="250" height="220" rx="12"
+        fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+
+  <text x="60" y="155" class="header">STUDENTS</text>
+
+  <text x="60" y="190" class="text">• Academic surveys</text>
+  <text x="60" y="215" class="text">• Study habits</text>
+  <text x="60" y="240" class="text">• Attendance</text>
+  <text x="60" y="265" class="text">• Sleep hours</text>
+  <text x="60" y="290" class="text">• Academic stress</text>
+  <text x="60" y="315" class="text">• Current GPA</text>
+
+  <!-- DATABASE -->
+  <rect x="470" y="120" width="250" height="220" rx="12"
+        fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+
+  <text x="490" y="155" class="header">DATABASE</text>
+
+  <text x="490" y="190" class="text">• MySQL</text>
+  <text x="490" y="215" class="text">• Users</text>
+  <text x="490" y="240" class="text">• Surveys</text>
+  <text x="490" y="265" class="text">• Academic records</text>
+  <text x="490" y="290" class="text">• Risk history</text>
+  <text x="490" y="315" class="text">• Reports</text>
+
+  <!-- ATENEA CORE -->
+  <rect x="900" y="120" width="250" height="220" rx="12"
+        fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+
+  <text x="920" y="155" class="header">ATENEA CORE</text>
+
+  <text x="920" y="190" class="text">• PHP Backend</text>
+  <text x="920" y="215" class="text">• Data Processing</text>
+  <text x="920" y="240" class="text">• Risk Analysis</text>
+  <text x="920" y="265" class="text">• Pattern Detection</text>
+  <text x="920" y="290" class="text">• Early Alerts</text>
+  <text x="920" y="315" class="text">• Recommendations</text>
+
+  <!-- Conexiones -->
+  <line x1="290" y1="230" x2="470" y2="230" class="line"/>
+  <line x1="720" y1="230" x2="900" y2="230" class="line"/>
+
+  <!-- PIPELINE -->
+  <rect x="40" y="420" width="1110" height="220" rx="12"
+        fill="#111827" stroke="#6366f1" stroke-width="2"/>
+
+  <text x="60" y="455" class="header">
+    ACADEMIC RISK ANALYSIS PIPELINE
+  </text>
+
+  <!-- STEP 1 -->
+  <rect x="60" y="490" width="180" height="110" rx="8"
+        fill="#1e1b4b" stroke="#818cf8"/>
+
+  <text x="95" y="525" class="header">01 · COLLECT</text>
+
+  <text x="75" y="555" class="text">Student surveys</text>
+  <text x="75" y="575" class="text">Attendance</text>
+
+  <!-- STEP 2 -->
+  <rect x="280" y="490" width="180" height="110" rx="8"
+        fill="#1e1b4b" stroke="#818cf8"/>
+
+  <text x="315" y="525" class="header">02 · PROCESS</text>
+
+  <text x="295" y="555" class="text">Validation</text>
+  <text x="295" y="575" class="text">Normalization</text>
+
+  <!-- STEP 3 -->
+  <rect x="500" y="490" width="180" height="110" rx="8"
+        fill="#1e1b4b" stroke="#818cf8"/>
+
+  <text x="535" y="525" class="header">03 · ANALYZE</text>
+
+  <text x="515" y="555" class="text">Patterns</text>
+  <text x="515" y="575" class="text">Indicators</text>
+
+  <!-- STEP 4 -->
+  <rect x="720" y="490" width="180" height="110" rx="8"
+        fill="#1e1b4b" stroke="#818cf8"/>
+
+  <text x="755" y="525" class="header">04 · PREDICT</text>
+
+  <text x="735" y="555" class="text">Low Risk</text>
+  <text x="735" y="575" class="text">Medium / High Risk</text>
+
+  <!-- STEP 5 -->
+  <rect x="940" y="490" width="180" height="110" rx="8"
+        fill="#052e16" stroke="#22c55e"/>
+
+  <text x="980" y="525" class="header">05 · REPORT</text>
+
+  <text x="960" y="555" class="text">Dashboard</text>
+  <text x="960" y="575" class="text">Statistics & PDF</text>
+
+  <!-- Flechas pipeline -->
+  <line x1="240" y1="545" x2="280" y2="545" class="line"/>
+  <line x1="460" y1="545" x2="500" y2="545" class="line"/>
+  <line x1="680" y1="545" x2="720" y2="545" class="line"/>
+  <line x1="900" y1="545" x2="940" y2="545" class="line"/>
+
+</svg>
