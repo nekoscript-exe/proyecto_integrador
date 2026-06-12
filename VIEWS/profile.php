@@ -26,7 +26,9 @@ $sql = "
         e.desmotivacion,
         e.herramientas_digitales,
         e.administracion_tiempo,
-        e.fecha_encuesta
+        e.fecha_encuesta,
+        r.nivel_riesgo,
+        r.puntuacion_riesgo
     FROM usuarios u
     LEFT JOIN (
         SELECT e1.*
@@ -38,6 +40,7 @@ $sql = "
             GROUP BY usuario_id
         ) latest ON latest.latest_id = e1.id
     ) e ON e.usuario_id = u.id
+    LEFT JOIN resultados r ON r.encuesta_id = e.id
     WHERE u.id = ?
     LIMIT 1
 ";
@@ -60,7 +63,7 @@ if ($stmt) {
         <a class="primary-action" href="dashboard.php?v=home">Volver al inicio</a>
     </section>
 <?php else: ?>
-    <?php $risk = riskLabel($profile["nivel_estres"], $profile["materias_reprobadas"]); ?>
+    <?php $riskLevel = $profile["nivel_riesgo"] ?? null; ?>
 
     <section class="profile-hero">
         <div class="profile-avatar"><?= h(initials($profile["nombre"])) ?></div>
@@ -71,7 +74,7 @@ if ($stmt) {
                     <h2><?= h($profile["nombre"]) ?></h2>
                     <p><?= h($profile["carrera"] ?: "Carrera no registrada") ?></p>
                 </div>
-                <span class="risk-pill risk-<?= strtolower($risk) ?>">Riesgo <?= h($risk) ?></span>
+                <span class="risk-pill <?= h(riskBadgeClass($riskLevel)) ?>"><?= h(riskBadgeText($riskLevel)) ?></span>
             </div>
 
             <div class="profile-tags">
@@ -162,11 +165,11 @@ if ($stmt) {
     <section class="insight-panel">
         <div>
             <p class="eyebrow">Lectura Atenea</p>
-            <h2><?= $risk === "Alto" ? "Prioridad de acompanamiento" : ($risk === "Medio" ? "Seguimiento recomendado" : "Avance saludable") ?></h2>
+            <h2><?= $riskLevel === "Alto" ? "Prioridad de acompanamiento" : ($riskLevel === "Medio" ? "Seguimiento recomendado" : "Avance saludable") ?></h2>
             <p>
-                <?php if ($risk === "Alto"): ?>
+                <?php if ($riskLevel === "Alto"): ?>
                     Conviene revisar carga academica, estres y materias pendientes para proponer apoyo temprano.
-                <?php elseif ($risk === "Medio"): ?>
+                <?php elseif ($riskLevel === "Medio"): ?>
                     Hay senales que pueden mejorar con habitos mas constantes y seguimiento academico.
                 <?php else: ?>
                     El perfil muestra indicadores estables; mantener rutinas ayudara a sostener el desempeno.

@@ -76,20 +76,19 @@ function metricValue($value, string $suffix = "", string $empty = "Sin dato"): s
     return h($value . $suffix);
 }
 
-function riskLabel($stress, $failedSubjects): string
+function riskBadgeClass(?string $level): string
 {
-    $stress = is_numeric($stress) ? (int) $stress : 0;
-    $failedSubjects = is_numeric($failedSubjects) ? (int) $failedSubjects : 0;
+    return match ($level) {
+        "Alto" => "risk-alto",
+        "Medio" => "risk-medio",
+        "Bajo" => "risk-bajo",
+        default => "risk-neutral",
+    };
+}
 
-    if ($stress >= 8 || $failedSubjects >= 3) {
-        return "Alto";
-    }
-
-    if ($stress >= 5 || $failedSubjects >= 1) {
-        return "Medio";
-    }
-
-    return "Bajo";
+function riskBadgeText(?string $level): string
+{
+    return in_array($level, ["Alto", "Medio", "Bajo"], true) ? $level : "Sin datos";
 }
 
 function yesNoValue($value): string

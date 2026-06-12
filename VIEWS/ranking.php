@@ -9,7 +9,9 @@ $sql = "
         e.promedio,
         e.asistencia,
         e.nivel_estres,
-        e.materias_reprobadas
+        e.materias_reprobadas,
+        r.nivel_riesgo,
+        r.puntuacion_riesgo
     FROM usuarios u
     LEFT JOIN (
         SELECT e1.*
@@ -21,6 +23,7 @@ $sql = "
             GROUP BY usuario_id
         ) latest ON latest.latest_id = e1.id
     ) e ON e.usuario_id = u.id
+    LEFT JOIN resultados r ON r.encuesta_id = e.id
     ORDER BY e.promedio IS NULL, e.promedio DESC, e.asistencia DESC, u.nombre ASC
     LIMIT 20
 ";
@@ -51,7 +54,7 @@ if ($result) {
 <?php if (count($ranking) > 0): ?>
     <section class="ranking-list">
         <?php foreach ($ranking as $index => $student): ?>
-            <?php $risk = riskLabel($student["nivel_estres"], $student["materias_reprobadas"]); ?>
+            <?php $riskLevel = $student["nivel_riesgo"] ?? null; ?>
             <a class="ranking-row <?= (int) $student["id"] === $userId ? "is-current" : "" ?>" href="dashboard.php?v=profile&id=<?= (int) $student["id"] ?>">
                 <div class="rank-number"><?= $index + 1 ?></div>
                 <div class="avatar small"><?= h(initials($student["nombre"])) ?></div>
@@ -68,7 +71,7 @@ if ($result) {
                         <small>Asistencia</small>
                         <strong><?= metricValue($student["asistencia"], "%") ?></strong>
                     </span>
-                    <span class="risk-pill risk-<?= strtolower($risk) ?>"><?= h($risk) ?></span>
+                    <span class="risk-pill <?= h(riskBadgeClass($riskLevel)) ?>"><?= h(riskBadgeText($riskLevel)) ?></span>
                 </div>
             </a>
         <?php endforeach; ?>

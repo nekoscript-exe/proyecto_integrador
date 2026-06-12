@@ -16,73 +16,107 @@ function ateneaRiskScore(array $survey): float
     $entrega = (int) ($survey["entrega_tareas"] ?? 3);
 
     if ($promedio < 6) {
-        $score += 24;
+        $score += 30;
+    } elseif ($promedio < 7) {
+        $score += 22;
     } elseif ($promedio < 7.5) {
         $score += 14;
+    } elseif ($promedio < 8) {
+        $score += 8;
     } elseif ($promedio < 8.5) {
-        $score += 6;
+        $score += 4;
     }
 
-    $score += min(18, $reprobadas * 6);
+    if ($reprobadas === 1) {
+        $score += 5;
+    } elseif ($reprobadas === 2) {
+        $score += 10;
+    } elseif ($reprobadas === 3) {
+        $score += 15;
+    } elseif ($reprobadas >= 4) {
+        $score += 20;
+    }
 
-    if ($asistencia < 70) {
-        $score += 18;
+    if ($asistencia < 60) {
+        $score += 26;
+    } elseif ($asistencia < 75) {
+        $score += 20;
     } elseif ($asistencia < 85) {
-        $score += 10;
-    } elseif ($asistencia < 93) {
-        $score += 4;
-    }
-
-    if ($estudio < 1) {
-        $score += 10;
-    } elseif ($estudio < 2) {
-        $score += 5;
-    }
-
-    if ($sueno < 5) {
-        $score += 10;
-    } elseif ($sueno < 6.5) {
-        $score += 5;
-    }
-
-    if ($redes > 6) {
-        $score += 8;
-    } elseif ($redes > 4) {
-        $score += 4;
-    }
-
-    if ($estres >= 8) {
-        $score += 12;
-    } elseif ($estres >= 5) {
-        $score += 6;
-    }
-
-    if ($desmotivacion >= 4) {
-        $score += 10;
-    } elseif ($desmotivacion >= 3) {
-        $score += 5;
-    }
-
-    if ($tiempo <= 2) {
-        $score += 8;
-    } elseif ($tiempo === 3) {
+        $score += 13;
+    } elseif ($asistencia < 90) {
+        $score += 7;
+    } elseif ($asistencia < 95) {
         $score += 3;
     }
 
-    if ($entrega <= 2) {
+    if ($estudio < 1) {
         $score += 8;
+    } elseif ($estudio < 2) {
+        $score += 6;
+    } elseif ($estudio < 3) {
+        $score += 4;
+    } elseif ($estudio < 5) {
+        $score += 2;
+    }
+
+    if ($sueno < 5) {
+        $score += 9;
+    } elseif ($sueno < 5.5) {
+        $score += 6;
+    } elseif ($sueno < 6.5) {
+        $score += 3;
+    }
+
+    if ($redes > 6) {
+        $score += 4;
+    } elseif ($redes > 4) {
+        $score += 2;
+    } elseif ($redes > 2) {
+        $score += 1;
+    }
+
+    if ($estres >= 10) {
+        $score += 12;
+    } elseif ($estres >= 8) {
+        $score += 10;
+    } elseif ($estres >= 6) {
+        $score += 6;
+    } elseif ($estres >= 4) {
+        $score += 3;
+    }
+
+    if ($desmotivacion >= 4) {
+        $score += 5;
+    } elseif ($desmotivacion === 3) {
+        $score += 3;
+    } elseif ($desmotivacion === 2) {
+        $score += 1;
+    }
+
+    if ($tiempo <= 1) {
+        $score += 6;
+    } elseif ($tiempo === 2) {
+        $score += 4;
+    } elseif ($tiempo === 3) {
+        $score += 2;
+    }
+
+    if ($entrega <= 1) {
+        $score += 4;
+    } elseif ($entrega === 2) {
+        $score += 2;
     }
 
     if ((int) ($survey["acceso_internet"] ?? 1) === 0) {
-        $score += 6;
+        $score += 2;
     }
 
     if ((int) ($survey["espacio_estudio"] ?? 1) === 0) {
-        $score += 6;
+        $score += 3;
     }
 
     if ((int) ($survey["trabaja"] ?? 0) === 1) {
-        $score += 4;
+        $score += 2;
     }
 
     return min(100, round($score, 2));
@@ -90,7 +124,7 @@ function ateneaRiskScore(array $survey): float
 
 function ateneaRiskLevel(float $score): string
 {
-    if ($score >= 60) {
+    if ($score >= 65) {
         return "Alto";
     }
 
@@ -99,6 +133,38 @@ function ateneaRiskLevel(float $score): string
     }
 
     return "Bajo";
+}
+
+function ateneaRefreshRecommendations(mysqli $conn, int $resultId, array $survey, string $level): void
+{
+    $stmt = $conn->prepare("DELETE FROM recomendaciones WHERE resultado_id = ?");
+
+    if ($stmt) {
+        $stmt->bind_param("i", $resultId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    foreach (ateneaRecommendations($survey, $level) as $message) {
+        $stmt = $conn->prepare("
+            INSERT INTO recomendaciones
+            (
+                resultado_id,
+                mensaje
+            )
+            VALUES
+            (
+                ?,
+                ?
+            )
+        ");
+
+        if ($stmt) {
+            $stmt->bind_param("is", $resultId, $message);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
 }
 
 function ateneaRecommendations(array $survey, string $level): array
@@ -185,6 +251,10 @@ function ateneaEnsureResultForSurvey(mysqli $conn, array $survey): ?array
     }
 
     $surveyId = (int) $survey["id"];
+    $currentScore = ateneaRiskScore($survey);
+    $currentLevel = ateneaRiskLevel($currentScore);
+    $currentObservation = ateneaObservation($survey, $currentScore, $currentLevel);
+
     $stmt = $conn->prepare("
         SELECT *
         FROM resultados
@@ -204,12 +274,36 @@ function ateneaEnsureResultForSurvey(mysqli $conn, array $survey): ?array
     $stmt->close();
 
     if ($result) {
+        if (
+            (float) ($result["puntuacion_riesgo"] ?? 0) !== $currentScore ||
+            ($result["nivel_riesgo"] ?? "") !== $currentLevel ||
+            ($result["observaciones"] ?? "") !== $currentObservation
+        ) {
+            $stmt = $conn->prepare("
+                UPDATE resultados
+                SET nivel_riesgo = ?, puntuacion_riesgo = ?, observaciones = ?
+                WHERE id = ?
+                LIMIT 1
+            ");
+
+            if ($stmt) {
+                $resultId = (int) $result["id"];
+                $stmt->bind_param("sdsi", $currentLevel, $currentScore, $currentObservation, $resultId);
+                $stmt->execute();
+                $stmt->close();
+                ateneaRefreshRecommendations($conn, $resultId, $survey, $currentLevel);
+                $result["nivel_riesgo"] = $currentLevel;
+                $result["puntuacion_riesgo"] = $currentScore;
+                $result["observaciones"] = $currentObservation;
+            }
+        }
+
         return $result;
     }
 
-    $score = ateneaRiskScore($survey);
-    $level = ateneaRiskLevel($score);
-    $observation = ateneaObservation($survey, $score, $level);
+    $score = $currentScore;
+    $level = $currentLevel;
+    $observation = $currentObservation;
 
     $stmt = $conn->prepare("
         INSERT INTO resultados
@@ -237,26 +331,7 @@ function ateneaEnsureResultForSurvey(mysqli $conn, array $survey): ?array
     $resultId = $conn->insert_id;
     $stmt->close();
 
-    foreach (ateneaRecommendations($survey, $level) as $message) {
-        $stmt = $conn->prepare("
-            INSERT INTO recomendaciones
-            (
-                resultado_id,
-                mensaje
-            )
-            VALUES
-            (
-                ?,
-                ?
-            )
-        ");
-
-        if ($stmt) {
-            $stmt->bind_param("is", $resultId, $message);
-            $stmt->execute();
-            $stmt->close();
-        }
-    }
+    ateneaRefreshRecommendations($conn, $resultId, $survey, $level);
 
     return [
         "id" => $resultId,

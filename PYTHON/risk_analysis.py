@@ -41,25 +41,34 @@ def risk_score(row: dict) -> float:
     tiempo = int(row.get("administracion_tiempo") or 0)
     entrega = int(row.get("entrega_tareas") or 3)
 
-    score += 24 if promedio < 6 else 14 if promedio < 7.5 else 6 if promedio < 8.5 else 0
-    score += min(18, reprobadas * 6)
-    score += 18 if asistencia < 70 else 10 if asistencia < 85 else 4 if asistencia < 93 else 0
-    score += 10 if estudio < 1 else 5 if estudio < 2 else 0
-    score += 10 if sueno < 5 else 5 if sueno < 6.5 else 0
-    score += 8 if redes > 6 else 4 if redes > 4 else 0
-    score += 12 if estres >= 8 else 6 if estres >= 5 else 0
-    score += 10 if desmotivacion >= 4 else 5 if desmotivacion >= 3 else 0
-    score += 8 if tiempo <= 2 else 3 if tiempo == 3 else 0
-    score += 8 if entrega <= 2 else 0
-    score += 6 if int(row.get("acceso_internet") or 1) == 0 else 0
-    score += 6 if int(row.get("espacio_estudio") or 1) == 0 else 0
-    score += 4 if int(row.get("trabaja") or 0) == 1 else 0
+    score += 30 if promedio < 6 else 22 if promedio < 7 else 14 if promedio < 7.5 else 8 if promedio < 8 else 4 if promedio < 8.5 else 0
+
+    if reprobadas == 1:
+        score += 5
+    elif reprobadas == 2:
+        score += 10
+    elif reprobadas == 3:
+        score += 15
+    elif reprobadas >= 4:
+        score += 20
+
+    score += 26 if asistencia < 60 else 20 if asistencia < 75 else 13 if asistencia < 85 else 7 if asistencia < 90 else 3 if asistencia < 95 else 0
+    score += 8 if estudio < 1 else 6 if estudio < 2 else 4 if estudio < 3 else 2 if estudio < 5 else 0
+    score += 9 if sueno < 5 else 6 if sueno < 5.5 else 3 if sueno < 6.5 else 0
+    score += 4 if redes > 6 else 2 if redes > 4 else 1 if redes > 2 else 0
+    score += 12 if estres >= 10 else 10 if estres >= 8 else 6 if estres >= 6 else 3 if estres >= 4 else 0
+    score += 5 if desmotivacion >= 4 else 3 if desmotivacion == 3 else 1 if desmotivacion == 2 else 0
+    score += 6 if tiempo <= 1 else 4 if tiempo == 2 else 2 if tiempo == 3 else 0
+    score += 4 if entrega <= 1 else 2 if entrega == 2 else 0
+    score += 2 if int(row.get("acceso_internet") or 1) == 0 else 0
+    score += 3 if int(row.get("espacio_estudio") or 1) == 0 else 0
+    score += 2 if int(row.get("trabaja") or 0) == 1 else 0
 
     return round(min(100, score), 2)
 
 
 def risk_level(score: float) -> str:
-    if score >= 60:
+    if score >= 65:
         return "Alto"
     if score >= 32:
         return "Medio"

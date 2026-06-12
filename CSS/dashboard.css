@@ -460,6 +460,11 @@ p {
     color: var(--red);
 }
 
+.risk-neutral {
+    background: rgba(198, 210, 221, 0.12);
+    color: var(--muted);
+}
+
 .profile-hero {
     display: grid;
     grid-template-columns: 112px minmax(0, 1fr);
