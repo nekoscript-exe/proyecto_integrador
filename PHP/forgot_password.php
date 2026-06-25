@@ -20,6 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($correo === "" || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         $message = "Escribe un correo válido.";
     } else {
+        // Buscamos la cuenta y luego generamos el enlace de recuperacion
         $stmt = $conn->prepare("SELECT id, nombre, correo FROM usuarios WHERE correo = ? LIMIT 1");
         if (!$stmt) {
             $message = "No fue posible procesar la solicitud.";
@@ -64,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="icon" type="image/png" href="../IMG/favicon.png">
     <title>Atenea | Recuperar contrasena</title>
     <link rel="stylesheet" href="../CSS/login.css">
+    <script src="../JS/theme.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -79,6 +81,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
 
         <div class="right-panel">
+            <div class="theme-row">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+            </div>
             <div class="login-card">
                 <h2>Restablecer contrasena</h2>
                 <p class="login-text">Escribe tu correo registrado y te guiaremos con un enlace seguro.</p>

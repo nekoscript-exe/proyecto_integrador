@@ -4,7 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once("conexion.php");
 require_once("analytics.php");
+require_once("dataset_service.php");
 
+// Si no hay sesion activa, mandamos al login
 if (!isset($_SESSION["usuario_id"])) {
     header("Location: login.php");
     exit();
@@ -16,7 +18,7 @@ if (($_SESSION["usuario_rol"] ?? "usuario") === "admin") {
 }
 
 $view = $_GET["v"] ?? "home";
-$allowedViews = ["home", "profile", "ranking", "analysis", "plan", "community", "activity", "assistant"];
+$allowedViews = ["home", "profile", "ranking", "analysis", "data", "plan", "community", "activity", "assistant"];
 
 if (!in_array($view, $allowedViews, true)) {
     $view = "home";
@@ -24,6 +26,7 @@ if (!in_array($view, $allowedViews, true)) {
 
 $userId = (int) $_SESSION["usuario_id"];
 ateneaEnsureAllResults($conn);
+ateneaDatasetEnsureSchema($conn);
 $currentUser = [
     "nombre" => $_SESSION["usuario_nombre"] ?? "Estudiante",
     "correo" => $_SESSION["usuario_correo"] ?? "",
@@ -105,12 +108,14 @@ $labels = [
     "profile" => "Perfil",
     "ranking" => "Ranking",
     "analysis" => "Analisis",
+    "data" => "Datos reales",
     "plan" => "Plan",
     "community" => "Comunidad",
     "activity" => "Actividad",
     "assistant" => "Asistente IA",
 ];
 
+// El boton superior cambia segun la seccion actual
 $topAction = [
     "label" => "Completar encuesta",
     "href" => "form.php",
@@ -129,6 +134,14 @@ if ($view === "assistant") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var theme = localStorage.getItem("atenea-theme");
+            if (theme === "light" || theme === "dark") {
+                document.documentElement.dataset.theme = theme;
+            }
+        })();
+    </script>
     <link rel="icon" type="image/png" href="../IMG/favicon.png">
     <title>Atenea | Dashboard</title>
     <link rel="stylesheet" href="../CSS/dashboard.css">
@@ -136,15 +149,19 @@ if ($view === "assistant") {
 
 <body>
     <div class="dashboard-shell">
-        <aside class="sidebar">
+        <aside class="sidebar" id="dashboardSidebar">
             <a class="brand" href="dashboard.php?v=home" aria-label="Ir al inicio">
                 <img src="../IMG/favicon.png" alt="Logo Atenea" class="brand-image">
                 <small>ODS 4</small>
             </a>
 
             <nav class="nav" aria-label="Navegacion principal">
+                <span class="nav-group">Explorar</span>
                 <a class="<?= $view === "home" ? "active" : "" ?>" href="dashboard.php?v=home">
                     <span>Inicio</span>
+                </a>
+                <a class="<?= $view === "data" ? "active" : "" ?>" href="dashboard.php?v=data">
+                    <span>Datos reales</span>
                 </a>
                 <a class="<?= $view === "ranking" ? "active" : "" ?>" href="dashboard.php?v=ranking">
                     <span>Ranking</span>
@@ -152,11 +169,12 @@ if ($view === "assistant") {
                 <a class="<?= $view === "analysis" ? "active" : "" ?>" href="dashboard.php?v=analysis">
                     <span>Analisis</span>
                 </a>
-                <a class="<?= $view === "plan" ? "active" : "" ?>" href="dashboard.php?v=plan">
-                    <span>Plan</span>
-                </a>
+                <span class="nav-group">Comunidad</span>
                 <a class="<?= $view === "community" ? "active" : "" ?>" href="dashboard.php?v=community">
                     <span>Comunidad</span>
+                </a>
+                <a class="<?= $view === "plan" ? "active" : "" ?>" href="dashboard.php?v=plan">
+                    <span>Plan</span>
                 </a>
                 <a class="<?= $view === "activity" ? "active" : "" ?>" href="dashboard.php?v=activity">
                     <span>Actividad</span>
@@ -164,6 +182,7 @@ if ($view === "assistant") {
                 <a class="<?= $view === "assistant" ? "active" : "" ?>" href="dashboard.php?v=assistant">
                     <span>Asistente IA</span>
                 </a>
+                <span class="nav-group">Perfil</span>
                 <a class="<?= $view === "profile" ? "active" : "" ?>" href="dashboard.php?v=profile">
                     <span>Mi perfil</span>
                 </a>
@@ -186,9 +205,24 @@ if ($view === "assistant") {
                     <p class="eyebrow">Atenea Dashboard</p>
                     <h1><?= h($labels[$view]) ?></h1>
                 </div>
-                <?php if ($topAction): ?>
-                    <a class="primary-action primary-action--small" href="<?= h($topAction["href"]) ?>"><?= h($topAction["label"]) ?></a>
-                <?php endif; ?>
+                <div class="topbar-actions">
+                    <button
+                        type="button"
+                        class="nav-toggle"
+                        data-nav-toggle
+                        aria-controls="dashboardSidebar"
+                        aria-expanded="false"
+                        aria-label="Abrir menu"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <button type="button" class="theme-toggle theme-toggle--dashboard" data-theme-toggle>Modo oscuro</button>
+                    <?php if ($topAction): ?>
+                        <a class="primary-action primary-action--small" href="<?= h($topAction["href"]) ?>"><?= h($topAction["label"]) ?></a>
+                    <?php endif; ?>
+                </div>
             </header>
 
             <?php
@@ -204,6 +238,9 @@ if ($view === "assistant") {
                     break;
                 case "analysis":
                     include "../VIEWS/analysis.php";
+                    break;
+                case "data":
+                    include "../VIEWS/data.php";
                     break;
                 case "plan":
                     include "../VIEWS/plan.php";
@@ -222,6 +259,9 @@ if ($view === "assistant") {
         </main>
     </div>
 
+    <div class="dashboard-overlay" data-nav-overlay></div>
+
+    <script src="../JS/theme.js"></script>
     <script src="../JS/dashboard.js"></script>
 </body>
 

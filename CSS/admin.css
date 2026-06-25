@@ -7,6 +7,19 @@
     --text-main: #ffffff;
     --text-soft: #c6d2dd;
     --danger: #ff7a59;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+html[data-theme="light"] {
+    --bg-main: #eef3f9;
+    --bg-soft: #ffffff;
+    --accent: #006b9f;
+    --surface: rgba(255, 255, 255, 0.84);
+    --line: rgba(13, 23, 36, 0.12);
+    --text-main: #0d1724;
+    --text-soft: #415164;
+    --danger: #c94b36;
+    --shadow: 0 18px 40px rgba(13, 23, 36, 0.08);
 }
 
 * {
@@ -19,6 +32,8 @@
 body {
     background: radial-gradient(circle at 0% 0%, rgba(0, 217, 255, 0.12), transparent 30%), var(--bg-main);
     color: var(--text-main);
+    overflow-x: hidden;
+    transition: background 220ms ease, color 220ms ease;
 }
 
 .admin-shell {
@@ -31,6 +46,10 @@ body {
     padding: 24px;
     border-right: 1px solid var(--line);
     background: rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme="light"] .admin-sidebar {
+    background: rgba(255, 255, 255, 0.78);
 }
 
 .admin-brand {
@@ -71,6 +90,23 @@ body {
     margin-bottom: 18px;
 }
 
+.admin-theme-toggle {
+    margin-bottom: 16px;
+    width: 100%;
+    min-height: 38px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-main);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .admin-user strong {
     display: block;
 }
@@ -81,7 +117,10 @@ body {
 }
 
 .admin-sidebar a {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 8px 8px 0;
     padding: 10px 14px;
     border-radius: 10px;
     border: 1px solid var(--line);
@@ -142,6 +181,7 @@ header p {
     border-radius: 16px;
     border: 1px solid var(--line);
     background: var(--surface);
+    box-shadow: var(--shadow);
 }
 
 .panel-head {
@@ -271,6 +311,64 @@ button {
     color: #ffb9a9;
 }
 
+.dataset-admin-panel {
+    border-color: rgba(0, 217, 255, 0.2);
+}
+
+.dataset-admin-grid,
+.dataset-admin-summary {
+    display: grid;
+    gap: 12px;
+}
+
+.dataset-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 14px;
+}
+
+.dataset-upload-form,
+.dataset-admin-summary article {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dataset-upload-form {
+    display: grid;
+    gap: 10px;
+}
+
+.dataset-upload-form button {
+    justify-self: start;
+}
+
+.dataset-admin-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 14px 0;
+}
+
+.dataset-admin-summary small {
+    color: var(--text-soft);
+}
+
+.dataset-admin-summary strong {
+    display: block;
+    margin-top: 6px;
+    color: var(--accent);
+    font-size: 1.15rem;
+    overflow-wrap: anywhere;
+}
+
+.dataset-preview-head {
+    margin-top: 18px;
+}
+
+.admin-table-link {
+    color: var(--accent);
+    font-weight: 700;
+}
+
 .table-wrap {
     overflow-x: auto;
     margin-top: 12px;
@@ -319,7 +417,9 @@ td {
     }
 
     .metrics,
-    .users-grid {
+    .users-grid,
+    .dataset-admin-grid,
+    .dataset-admin-summary {
         grid-template-columns: 1fr;
     }
 
@@ -331,5 +431,48 @@ td {
     .history-item {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-main {
+        padding: 16px;
+    }
+
+    .admin-sidebar {
+        padding: 16px;
+    }
+
+    .admin-brand__logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .admin-sidebar a {
+        width: 100%;
+        margin: 0 0 8px 0;
+    }
+
+    .metrics article,
+    .panel,
+    .user-card {
+        border-radius: 12px;
+    }
+
+    header h2 {
+        font-size: 1.7rem;
+    }
+
+    .metrics strong {
+        font-size: 1.4rem;
+    }
+
+    table {
+        min-width: 720px;
+    }
+
+    .table-wrap {
+        margin-top: 10px;
+        overflow-x: auto;
     }
 }

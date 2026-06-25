@@ -1,5 +1,6 @@
 <?php
 
+// El puntaje se arma con tres bloques: academia, habitos y contexto
 function ateneaRiskScore(array $survey): float
 {
     $score = 0;
@@ -15,6 +16,7 @@ function ateneaRiskScore(array $survey): float
     $tiempo = (int) ($survey["administracion_tiempo"] ?? 0);
     $entrega = (int) ($survey["entrega_tareas"] ?? 3);
 
+    // Bloque academico: promedio y materias reprobadas pesan mas
     if ($promedio < 6) {
         $score += 30;
     } elseif ($promedio < 7) {
@@ -49,6 +51,7 @@ function ateneaRiskScore(array $survey): float
         $score += 3;
     }
 
+    // Bloque de habitos: estudio, sueno y distracciones
     if ($estudio < 1) {
         $score += 8;
     } elseif ($estudio < 2) {
@@ -75,6 +78,7 @@ function ateneaRiskScore(array $survey): float
         $score += 1;
     }
 
+    // Bloque de contexto: estres, motivacion y organizacion diaria
     if ($estres >= 10) {
         $score += 12;
     } elseif ($estres >= 8) {
@@ -107,6 +111,7 @@ function ateneaRiskScore(array $survey): float
         $score += 2;
     }
 
+    // Factores extra: aunque sean pequenos, tambien suman
     if ((int) ($survey["acceso_internet"] ?? 1) === 0) {
         $score += 2;
     }
@@ -124,6 +129,7 @@ function ateneaRiskScore(array $survey): float
 
 function ateneaRiskLevel(float $score): string
 {
+    // Escala simple para mostrar el nivel en dashboard y ranking
     if ($score >= 65) {
         return "Alto";
     }
@@ -137,6 +143,7 @@ function ateneaRiskLevel(float $score): string
 
 function ateneaRefreshRecommendations(mysqli $conn, int $resultId, array $survey, string $level): void
 {
+    // Borramos recomendaciones viejas y escribimos las nuevas
     $stmt = $conn->prepare("DELETE FROM recomendaciones WHERE resultado_id = ?");
 
     if ($stmt) {
@@ -214,6 +221,7 @@ function ateneaRecommendations(array $survey, string $level): array
 
 function ateneaObservation(array $survey, float $score, string $level): string
 {
+    // Resumen corto para mostrar en pantalla
     $promedio = $survey["promedio"] ?? "sin dato";
     $asistencia = $survey["asistencia"] ?? "sin dato";
     $estres = $survey["nivel_estres"] ?? "sin dato";

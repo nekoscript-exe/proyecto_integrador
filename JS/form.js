@@ -7,6 +7,8 @@ const submitBtn = document.getElementById("submitBtn");
 const progress = document.getElementById("progress");
 const progressText = document.getElementById("progressText");
 const form = document.getElementById("multiStepForm");
+const stepLabels = document.querySelectorAll(".steps .step");
+const rangeInputs = document.querySelectorAll("input[type='range'][data-range-input]");
 
 let currentStep = 0;
 
@@ -19,6 +21,10 @@ function updateSteps(){
     });
 
     steps[currentStep].classList.add("active");
+
+    stepLabels.forEach((label, index) => {
+        label.classList.toggle("active", index === currentStep);
+    });
 
     const percent =
         ((currentStep + 1) / steps.length) * 100;
@@ -47,6 +53,32 @@ function updateSteps(){
     }
 
 }
+
+function updateRangeState(input){
+    const value = input.value;
+    const output = document.querySelector(
+        `[data-range-output="${input.name}"]`
+    );
+
+    if(output){
+        output.textContent = `${value} / ${input.max}`;
+    }
+
+    const min = Number(input.min || 0);
+    const max = Number(input.max || 100);
+    const current = Number(value || min);
+    const percentage = ((current - min) / (max - min)) * 100;
+
+    input.style.setProperty(
+        "--range-fill",
+        `${Math.max(0, Math.min(100, percentage))}%`
+    );
+}
+
+rangeInputs.forEach((input) => {
+    updateRangeState(input);
+    input.addEventListener("input", () => updateRangeState(input));
+});
 
 nextBtn.addEventListener("click", () => {
     const currentFields = steps[currentStep].querySelectorAll("input, select, textarea");

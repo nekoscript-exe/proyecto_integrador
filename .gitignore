@@ -1,1 +1,8 @@
 /INFO
+/venv/
+__pycache__/
+*.pyc
+DATASET/uploads/
+__pycache__/
+*.pyc
+venv/

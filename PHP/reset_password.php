@@ -18,6 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = trim($_POST["password"] ?? "");
     $confirm = trim($_POST["confirm_password"] ?? "");
 
+    // Primero validamos el token antes de cambiar la contrasena
     if (!$tokenData) {
         $message = "El enlace no es válido o ya expiró.";
     } elseif ($password === "" || strlen($password) < 8) {
@@ -58,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="icon" type="image/png" href="../IMG/favicon.png">
     <title>Atenea | Nueva contraseña</title>
     <link rel="stylesheet" href="../CSS/login.css">
+    <script src="../JS/theme.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -73,6 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
 
         <div class="right-panel">
+            <div class="theme-row">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+            </div>
             <div class="login-card">
                 <h2>Crear nueva contraseña</h2>
                 <p class="login-text">Elige una contraseña segura para volver a entrar a tu cuenta.</p>

@@ -8,6 +8,42 @@
     --surface: rgba(255,255,255,0.04);
     --surface-strong: rgba(255,255,255,0.06);
     --line: rgba(255,255,255,0.1);
+    --shadow: 0 18px 40px rgba(0,0,0,0.18);
+}
+
+html[data-theme="light"]{
+    --bg-main: #eff4fa;
+    --bg-soft: #ffffff;
+    --text-main: #0d1724;
+    --text-soft: #415164;
+    --text-muted: #5c6e80;
+    --accent: #006b9f;
+    --surface: rgba(255,255,255,0.84);
+    --surface-strong: rgba(255,255,255,0.96);
+    --line: rgba(14, 25, 40, 0.12);
+    --shadow: 0 18px 40px rgba(13, 23, 36, 0.08);
+}
+
+html[data-theme="light"] header{
+    background: rgba(255, 255, 255, 0.76);
+}
+
+html[data-theme="light"] nav a{
+    background: rgba(13, 23, 36, 0.05);
+}
+
+html[data-theme="light"] nav a:hover{
+    background: rgba(0, 107, 159, 0.08);
+}
+
+html[data-theme="light"] .hero-card,
+html[data-theme="light"] .card,
+html[data-theme="light"] .mini-card,
+html[data-theme="light"] .stat-box,
+html[data-theme="light"] .workflow-box,
+html[data-theme="light"] .dataset-preview__copy,
+html[data-theme="light"] .dataset-preview__panel{
+    box-shadow: 0 18px 40px rgba(13, 23, 36, 0.08);
 }
 
 *{
@@ -22,6 +58,7 @@ body{
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.6;
+    transition: background 220ms ease, color 220ms ease;
 }
 
 html{
@@ -36,6 +73,7 @@ header{
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 18px;
     background: rgba(0,0,0,0.2);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
@@ -82,6 +120,30 @@ nav a{
     font-weight: bold;
     font-size: 0.95rem;
     white-space: nowrap;
+}
+
+.header-actions{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.theme-toggle{
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.theme-toggle:hover{
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 nav a:hover{
@@ -170,6 +232,174 @@ nav a:hover{
     border-radius: 20px;
     padding: 28px;
     backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+}
+
+.dataset-preview{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.92fr);
+    gap: 24px;
+    align-items: start;
+    margin-top: 8px;
+}
+
+.dataset-preview__copy,
+.dataset-preview__panel{
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+}
+
+.dataset-preview__copy{
+    display: grid;
+    gap: 18px;
+    padding: 28px;
+}
+
+.dataset-preview__copy span,
+.dataset-preview__panel-head p{
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dataset-preview__copy h2{
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1.12;
+    max-width: 700px;
+}
+
+.dataset-preview__copy p{
+    color: var(--text-soft);
+    max-width: 720px;
+    line-height: 1.75;
+}
+
+.dataset-preview__stats{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.dataset-preview__stats article{
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+}
+
+.dataset-preview__stats strong{
+    display: block;
+    color: var(--accent);
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.dataset-preview__stats small{
+    display: block;
+    margin-top: 6px;
+    color: var(--text-soft);
+}
+
+.dataset-preview__actions{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.dataset-preview__panel{
+    display: grid;
+    gap: 16px;
+    padding: 22px;
+}
+
+.dataset-preview__panel-head{
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dataset-preview__panel-head strong{
+    display: block;
+    margin-top: 6px;
+    font-size: 1.1rem;
+}
+
+.dataset-preview__panel-head a{
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.dataset-preview__bars{
+    display: grid;
+    gap: 12px;
+}
+
+.dataset-preview__bars article{
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--surface-strong);
+}
+
+.dataset-preview__bars-top{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.dataset-preview__bars-top span,
+.dataset-preview__bars small{
+    color: var(--text-soft);
+    font-size: 0.88rem;
+}
+
+.dataset-preview__track{
+    height: 9px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--line);
+}
+
+.dataset-preview__track span{
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), rgba(0,217,255,0.45));
+}
+
+.dataset-preview__table{
+    overflow: auto;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+}
+
+.dataset-preview__table table{
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 340px;
+    background: var(--surface-strong);
+}
+
+.dataset-preview__table th,
+.dataset-preview__table td{
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.94rem;
+    white-space: nowrap;
+}
+
+.dataset-preview__table th{
+    color: var(--text-main);
 }
 
 .hero-card h3{
@@ -422,29 +652,133 @@ footer{
         gap: 12px;
     }
 
+    .dataset-preview{
+        grid-template-columns: 1fr;
+    }
+
+    .dataset-preview__stats{
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media(max-width: 760px){
+
+    header{
+        padding: 14px 5%;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .logo img{
+        width: min(220px, 68vw);
+    }
+
+    nav{
+        width: 100%;
+        order: 3;
+    }
+
+    nav ul{
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    nav ul::-webkit-scrollbar{
+        display: none;
+    }
+
+    nav a{
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 0.88rem;
+    }
+
+    .header-actions{
+        width: 100%;
+        order: 2;
+        justify-content: flex-start;
+    }
+
+    .theme-toggle{
+        width: auto;
+        min-width: 124px;
+    }
+
+    .hero{
+        padding: 118px 5% 42px;
+        gap: 24px;
+    }
+
+    .hero-card,
+    .dataset-preview__copy,
+    .dataset-preview__panel{
+        padding: 20px;
+    }
+
+    .grid{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .box{
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    .buttons{
+        gap: 12px;
+    }
+
+    .btn-primary,
+    .btn-secondary{
+        width: 100%;
+        text-align: center;
+        padding: 14px 20px;
+    }
+
+    .dataset-preview__stats{
+        gap: 10px;
+    }
+
+    .dataset-preview__table th,
+    .dataset-preview__table td{
+        padding: 10px 12px;
+        font-size: 0.88rem;
+    }
+
+    section{
+        padding: 70px 5%;
+    }
 }
 
 @media(max-width: 520px){
 
-    header{
-        padding: 16px 6%;
-    }
-
     .hero{
-        padding: 110px 6% 45px;
+        padding: 108px 5% 40px;
     }
 
     .hero-text h2{
-        font-size: 2rem;
+        font-size: 1.9rem;
     }
 
     nav ul{
-        gap: 10px;
+        gap: 8px;
     }
 
     nav a{
-        padding: 0 12px;
-        font-size: 0.9rem;
+        padding: 0 11px;
+        font-size: 0.86rem;
+    }
+
+    .theme-toggle{
+        width: 100%;
+        justify-content: center;
     }
 
     .buttons a{
@@ -453,15 +787,23 @@ footer{
     }
 
     section{
-        padding: 70px 6%;
+        padding: 64px 5%;
     }
 
     .section-title{
-        font-size: 2.2rem;
+        font-size: 2rem;
     }
 
     .logo img{
-        width: min(260px, 70vw);
+        width: min(200px, 68vw);
+    }
+
+    .dataset-preview__stats{
+        grid-template-columns: 1fr;
+    }
+
+    .grid{
+        grid-template-columns: 1fr;
     }
 
 }

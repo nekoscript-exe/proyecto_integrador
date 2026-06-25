@@ -1,9 +1,23 @@
 :root{
     --bg-main: #08111f;
+    --bg-soft: #0c1728;
+    --text-main: #ffffff;
     --text-soft: #c6d2dd;
     --accent: #00d9ff;
     --surface: rgba(255,255,255,0.04);
     --line: rgba(255,255,255,0.08);
+    --shadow: 0 18px 40px rgba(0,0,0,0.18);
+}
+
+html[data-theme="light"]{
+    --bg-main: #eef3f9;
+    --bg-soft: #ffffff;
+    --text-main: #0d1724;
+    --text-soft: #415164;
+    --accent: #006b9f;
+    --surface: rgba(255,255,255,0.88);
+    --line: rgba(13,23,36,0.12);
+    --shadow: 0 18px 40px rgba(13,23,36,0.08);
 }
 
 *{
@@ -16,7 +30,8 @@
 body{
     min-height: 100vh;
     background: radial-gradient(circle at 0% 0%, rgba(0,217,255,0.12), transparent 30%), var(--bg-main);
-    color: white;
+    color: var(--text-main);
+    transition: background 220ms ease, color 220ms ease;
 }
 
 html{
@@ -48,6 +63,10 @@ html{
     overflow: hidden;
 }
 
+html[data-theme="light"] .left-panel{
+    background: linear-gradient(135deg, rgba(0,107,159,0.12), var(--bg-soft));
+}
+
 .overlay{
     position: absolute;
     width: 100%;
@@ -56,6 +75,15 @@ html{
     radial-gradient(
         circle at top left,
         rgba(0,217,255,0.2),
+        transparent 40%
+    );
+}
+
+html[data-theme="light"] .overlay{
+    background:
+    radial-gradient(
+        circle at top left,
+        rgba(0,107,159,0.16),
         transparent 40%
     );
 }
@@ -88,7 +116,7 @@ html{
     border-radius: 30px;
     background: rgba(0,217,255,0.12);
     border: 1px solid rgba(0,217,255,0.2);
-    color: #00d9ff;
+    color: var(--accent);
     margin-bottom: 30px;
     font-size: 0.9rem;
 }
@@ -116,7 +144,7 @@ html{
 }
 
 .info-box h3{
-    color: #00d9ff;
+    color: var(--accent);
     margin-bottom: 10px;
 }
 
@@ -125,9 +153,33 @@ html{
 .right-panel{
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 28px;
+    gap: 12px;
+}
+
+.theme-row{
+    width: min(100%, 500px);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.theme-toggle{
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-main);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.theme-toggle:hover{
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* REGISTER CARD */
@@ -140,6 +192,7 @@ html{
     border-radius: 22px;
     padding: 34px;
     backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
 }
 
 .register-card h2{
@@ -172,7 +225,7 @@ html{
 .input-group label{
     display: block;
     margin-bottom: 10px;
-    color: #d8e1ea;
+    color: var(--text-soft);
 }
 
 .input-group input,
@@ -182,7 +235,7 @@ html{
     border-radius: 14px;
     border: 1px solid var(--line);
     background: var(--surface);
-    color: white;
+    color: var(--text-main);
     outline: none;
     transition: 0.3s;
 }
@@ -194,8 +247,8 @@ html{
 }
 
 .input-group select option{
-    background: #08111f;
-    color: white;
+    background: var(--bg-soft);
+    color: var(--text-main);
 }
 
 .other-career{
@@ -214,7 +267,7 @@ html{
     padding: 16px;
     border: none;
     border-radius: 14px;
-    background: #00d9ff;
+    background: var(--accent);
     color: #08111f;
     font-size: 0.98rem;
     font-weight: 700;
@@ -236,7 +289,7 @@ html{
 }
 
 .extra-links a{
-    color: #c6d2dd;
+    color: var(--text-soft);
     text-decoration: none;
     transition: 0.3s;
 }
@@ -262,8 +315,52 @@ html{
         padding: 20px;
     }
 
+    .theme-row,
+    .register-card{
+        width: 100%;
+        max-width: 100%;
+    }
+
     .register-card{
         padding: 24px;
+    }
+
+}
+
+@media(max-width: 560px){
+
+    .right-panel{
+        padding: 16px;
+    }
+
+    .theme-row{
+        justify-content: stretch;
+    }
+
+    .theme-toggle{
+        width: 100%;
+    }
+
+    .register-card{
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    .register-card h2{
+        font-size: 1.7rem;
+    }
+
+    .input-group input,
+    .input-group select{
+        padding: 14px;
+    }
+
+    .register-btn{
+        padding: 14px;
+    }
+
+    .info-boxes{
+        flex-direction: column;
     }
 
 }

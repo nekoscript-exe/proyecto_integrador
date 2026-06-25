@@ -15,11 +15,12 @@
         Atenea | Encuesta Académica
     </title>
 
-    <!-- CSS -->
+    <!-- Cargamos la hoja de estilos -->
     <link
         rel="stylesheet"
         href="../CSS/form.css"
     >
+    <script src="../JS/theme.js" defer></script>
 
 </head>
 
@@ -27,7 +28,7 @@
 
     <div class="container">
 
-        <!-- LEFT PANEL -->
+        <!-- Panel izquierdo con marca y progreso -->
         <div class="left-panel">
 
             <div class="overlay"></div>
@@ -50,7 +51,7 @@
 
                 </p>
 
-                <!-- PROGRESS -->
+                <!-- Barra de progreso general -->
                 <div class="progress-container">
 
                     <div class="progress-info">
@@ -76,7 +77,7 @@
 
                 </div>
 
-                <!-- STEPS -->
+                <!-- Indicador de pasos -->
                 <div class="steps">
 
                     <div class="step active">
@@ -117,11 +118,14 @@
 
         </div>
 
-        <!-- RIGHT PANEL -->
+        <!-- Panel derecho con la encuesta -->
         <div class="right-panel">
 
-            <!-- IMPORTANTE -->
-            <!-- ENVÍA A register.php -->
+            <div class="theme-row">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+            </div>
+
+            <!-- Este formulario manda la info a register.php -->
             <form
                 class="form-card"
                 action="register.php"
@@ -129,7 +133,7 @@
                 id="multiStepForm"
             >
 
-                <!-- STEP 1 -->
+                <!-- Paso 1: datos academicos -->
                 <div class="form-step active">
 
                     <h2>
@@ -210,7 +214,7 @@
 
                 </div>
 
-                <!-- STEP 2 -->
+                <!-- Paso 2: habitos -->
                 <div class="form-step">
 
                     <h2>
@@ -317,7 +321,7 @@
 
                 </div>
 
-                <!-- STEP 3 -->
+                <!-- Paso 3: factores de apoyo -->
                 <div class="form-step">
 
                     <h2>
@@ -426,7 +430,7 @@
 
                 </div>
 
-                <!-- STEP 4 -->
+                <!-- Paso 4: bienestar y organizacion -->
                 <div class="form-step">
 
                     <h2>
@@ -443,13 +447,25 @@
                             13. ¿Cómo calificarías tu nivel de estrés académico?
                         </label>
 
-                        <input
-                            type="range"
-                            name="nivel_estres"
-                            min="1"
-                            max="10"
-                            value="5"
-                        >
+                        <div class="range-shell">
+
+                            <div class="range-header">
+                                <span class="range-hint">Nada</span>
+                                <span class="range-value" data-range-output="nivel_estres">5 / 10</span>
+                                <span class="range-hint">Mucho</span>
+                            </div>
+
+                            <input
+                                type="range"
+                                name="nivel_estres"
+                                min="1"
+                                max="10"
+                                value="5"
+                                data-range-input="nivel_estres"
+                                aria-label="Nivel de estrés académico"
+                            >
+
+                        </div>
 
                     </div>
 
@@ -525,19 +541,31 @@
                             16. ¿Consideras que administras bien tu tiempo?
                         </label>
 
-                        <input
-                            type="range"
-                            name="administracion_tiempo"
-                            min="1"
-                            max="5"
-                            value="3"
-                        >
+                        <div class="range-shell">
+
+                            <div class="range-header">
+                                <span class="range-hint">Poco</span>
+                                <span class="range-value" data-range-output="administracion_tiempo">3 / 5</span>
+                                <span class="range-hint">Muy bien</span>
+                            </div>
+
+                            <input
+                                type="range"
+                                name="administracion_tiempo"
+                                min="1"
+                                max="5"
+                                value="3"
+                                data-range-input="administracion_tiempo"
+                                aria-label="Administración del tiempo"
+                            >
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                <!-- BUTTONS -->
+                <!-- Botones para avanzar o volver -->
                 <div class="buttons">
 
                     <button
@@ -569,7 +597,7 @@
 
     </div>
 
-    <!-- JS -->
+    <!-- Cargamos el script del formulario -->
     <script src="../JS/form.js"></script>
 
 </body>

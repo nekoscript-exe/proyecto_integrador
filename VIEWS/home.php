@@ -31,6 +31,19 @@ if ($summaryResult) {
     $community = array_merge($community, $summaryResult->fetch_assoc());
 }
 
+$latestDataset = ateneaDatasetCurrentUpload($conn);
+$datasetPreview = $latestDataset ? [
+    "registros" => (int) ($latestDataset["total_students"] ?? $latestDataset["filas_clean"] ?? 0),
+    "aprobados" => (float) ($latestDataset["porcentaje_aprobados"] ?? 0),
+    "promedio" => (float) ($latestDataset["promedio_general"] ?? 0),
+    "correlacion" => (float) ($latestDataset["correlacion_estudio_desempeno"] ?? 0),
+] : [
+    "registros" => 0,
+    "aprobados" => null,
+    "promedio" => null,
+    "correlacion" => null,
+];
+
 $sql = "
     SELECT
         u.id,
@@ -105,6 +118,46 @@ if ($stmt) {
     </article>
 </section>
 
+<section class="dataset-preview-panel">
+    <div class="section-head compact">
+        <div>
+            <p class="eyebrow">Datos reales</p>
+            <h2>Resumen del dataset procesado</h2>
+        </div>
+        <a class="text-link" href="dashboard.php?v=data">Abrir explorador</a>
+    </div>
+
+    <?php if ($latestDataset): ?>
+        <div class="dataset-preview-grid">
+            <article class="dataset-preview-card">
+                <small>Registros limpios</small>
+                <strong><?= metricValue($datasetPreview["registros"], "", "0") ?></strong>
+                <span><?= h($latestDataset["nombre_original"] ?? "Dataset actual") ?></span>
+            </article>
+            <article class="dataset-preview-card">
+                <small>Promedio general</small>
+                <strong><?= metricValue($datasetPreview["promedio"]) ?></strong>
+                <span>Lectura sintetica del rendimiento</span>
+            </article>
+            <article class="dataset-preview-card">
+                <small>Aprobacion</small>
+                <strong><?= metricValue($datasetPreview["aprobados"], "%") ?></strong>
+                <span>Estimacion de estudiantes aprobados</span>
+            </article>
+            <article class="dataset-preview-card">
+                <small>Estudio vs desempeno</small>
+                <strong><?= h(number_format((float) ($datasetPreview["correlacion"] ?? 0), 4, ".", "")) ?></strong>
+                <span>Relacion lineal entre habitos y resultado</span>
+            </article>
+        </div>
+    <?php else: ?>
+        <div class="empty-state">
+            <h2>Aun no hay datos cargados.</h2>
+            <p>Cuando un administrador importe un CSV, aqui aparecerá el resumen del analisis.</p>
+        </div>
+    <?php endif; ?>
+</section>
+
 <section class="quick-actions">
     <a href="form.php">
         <strong>Completar encuesta</strong>
@@ -121,6 +174,10 @@ if ($stmt) {
     <a href="dashboard.php?v=analysis">
         <strong>Revisar diagnostico</strong>
         <span>Riesgo, factores y lectura academica</span>
+    </a>
+    <a href="dashboard.php?v=data">
+        <strong>Explorar datos reales</strong>
+        <span>Dataset Kaggle procesado con tablas y graficas</span>
     </a>
     <a href="dashboard.php?v=ranking">
         <strong>Consultar ranking</strong>

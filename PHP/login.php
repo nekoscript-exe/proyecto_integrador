@@ -2,11 +2,9 @@
 
 session_start();
 
-/* CONEXION */
+// Cargamos la conexion y las funciones de seguridad antes de hacer cualquier cosa
 require_once("conexion.php");
 require_once("security.php");
-
-/* VALIDAR CONEXION */
 
 if(!isset($conn)){
 
@@ -24,8 +22,6 @@ function usuariosTieneEstado(mysqli $conn): bool
     $result = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'estado'");
     return $result && $result->num_rows > 0;
 }
-
-/* LOGIN */
 
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 
@@ -65,8 +61,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 )
             ){
 
-                /* SESSION */
-
+                // Guardamos los datos basicos del usuario en la sesion
                 $_SESSION["usuario_id"] = $usuario["id"];
 
                 $_SESSION["usuario_nombre"] = $usuario["nombre"];
@@ -79,8 +74,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     session_destroy();
                     $error = "Tu cuenta está bloqueada. Contacta a un administrador.";
                 } else {
-                    /* GUARDAR SESION */
-
+                    // Registramos un rastro simple del acceso para auditoria
                     $ipUsuario = $_SERVER["REMOTE_ADDR"] ?? "Desconocida";
 
                     $dispositivo = $_SERVER["HTTP_USER_AGENT"] ?? "Desconocido";
@@ -166,6 +160,7 @@ if (($_GET["reset"] ?? "") === "ok") {
         rel="stylesheet"
         href="../CSS/login.css"
     >
+    <script src="../JS/theme.js" defer></script>
 
 </head>
 
@@ -198,6 +193,10 @@ if (($_GET["reset"] ?? "") === "ok") {
 
         <!-- RIGHT -->
         <div class="right-panel">
+
+            <div class="theme-row">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+            </div>
 
             <div class="login-card">
 

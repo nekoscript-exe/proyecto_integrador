@@ -6,6 +6,7 @@ require_once("analytics.php");
 /** @var mysqli $conn */
 
 $error = "";
+// Carreras permitidas y opcion libre para casos especiales
 $carrerasPermitidas = [
     "Ingeniería en Tecnología Automotriz",
     "Ingeniería Mecatrónica",
@@ -20,6 +21,7 @@ function nombreCompletoValido(string $nombre): bool
 {
     $nombre = trim(preg_replace('/\s+/', ' ', $nombre));
 
+    // Pedimos nombre(s) y dos apellidos como minimo
     if (!preg_match('/^[\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+(?:[\' -][\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)*(?:\s+[\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+(?:[\' -][\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)*)+$/u', $nombre)) {
         return false;
     }
@@ -76,6 +78,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
     }
 
+    // Revisamos los datos basicos antes de tocar la base de datos
     if(
         empty($nombre) ||
         empty($correo) ||
@@ -108,6 +111,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     }else{
 
+        // Evitamos usuarios duplicados por correo
         $stmtCheck = $conn->prepare("
             SELECT id
             FROM usuarios
@@ -133,6 +137,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     PASSWORD_DEFAULT
                 );
 
+                // Usamos una sola transaccion para no dejar datos a medias
                 $conn->begin_transaction();
 
                 try{
@@ -171,6 +176,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $usuario_id = $conn->insert_id;
                     $stmtUsuario->close();
 
+                    // Guardamos la encuesta justo despues del usuario
                     $promedio = (float) $_POST["promedio"];
                     $materias_reprobadas = (int) $_POST["materias_reprobadas"];
                     $asistencia = (int) $_POST["asistencia"];
@@ -288,6 +294,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     exit();
 
                 }catch(Throwable $e){
+                    // Si algo falla, regresamos todo para no romper la info
                     $conn->rollback();
                     $error = $e->getMessage();
                 }
@@ -324,6 +331,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         rel="stylesheet"
         href="../CSS/register.css"
     >
+    <script src="../JS/theme.js" defer></script>
 
 </head>
 
@@ -331,7 +339,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     <div class="container">
 
-        <!-- LEFT -->
+        <!-- Panel izquierdo -->
 
         <div class="left-panel">
 
@@ -359,18 +367,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
         </div>
 
-        <!-- RIGHT -->
+        <!-- Panel derecho -->
 
         <div class="right-panel">
+
+            <div class="theme-row">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+            </div>
 
             <form
                 class="register-card"
                 method="POST"
             >
 
-                <!-- =========================
-                     HIDDEN INPUTS ENCUESTA
-                ========================== -->
+                <!-- Inputs ocultos que vienen de la encuesta -->
 
                 <?php
 
@@ -429,7 +439,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </p>
 
-                <!-- ERROR -->
+                <!-- Caja de error -->
 
                 <?php if(!empty($error)): ?>
 
@@ -441,7 +451,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 <?php endif; ?>
 
-                <!-- NOMBRE -->
+                <!-- Campo nombre -->
 
                 <div class="input-group">
 
@@ -463,7 +473,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </div>
 
-                <!-- CORREO -->
+                <!-- Campo correo -->
 
                 <div class="input-group">
 
@@ -481,7 +491,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </div>
 
-                <!-- PASSWORD -->
+                <!-- Campo contrasena -->
 
                 <div class="input-group">
 
@@ -497,7 +507,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </div>
 
-                <!-- EDAD -->
+                <!-- Campo edad -->
 
                 <div class="input-group">
 
@@ -516,7 +526,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </div>
 
-                <!-- CARRERA -->
+                <!-- Campo carrera -->
 
                 <div class="input-group">
 
@@ -559,7 +569,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 </div>
 
-                <!-- BOTON -->
+                <!-- Boton de envio -->
 
                 <button
                     type="submit"
