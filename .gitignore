@@ -1,8 +1,15 @@
-/INFO
-/venv/
-__pycache__/
-*.pyc
-DATASET/uploads/
-__pycache__/
-*.pyc
+# Entorno virtual
 venv/
+
+# Caché de Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Datos temporales
+DATASET/uploads/
+
+# Archivos de información local
+INFO/
