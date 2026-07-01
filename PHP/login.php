@@ -68,6 +68,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 $_SESSION["usuario_correo"] = $usuario["correo"];
                 $_SESSION["usuario_rol"] = $usuario["rol"] ?? "usuario";
+                $_SESSION["atenea_skin"] = ((int) $usuario["id"] === 15 || strtolower((string) $usuario["correo"]) === "paola.moralesj2005@gmail.com")
+                    ? "paola"
+                    : "default";
 
                 if (($usuario["estado"] ?? "activo") === "bloqueado") {
                     session_unset();

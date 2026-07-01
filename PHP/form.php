@@ -1,5 +1,13 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$isPaolaSkin = (int) ($_SESSION["usuario_id"] ?? 0) === 15
+    || strtolower((string) ($_SESSION["usuario_correo"] ?? "")) === "paola.moralesj2005@gmail.com";
+?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es"<?= $isPaolaSkin ? ' data-skin="paola"' : "" ?>>
 
 <head>
 

@@ -42,6 +42,9 @@ if ($stmt) {
     $stmt->close();
 }
 
+$isPaolaSkin = $userId === 15 || strtolower((string) ($currentUser["correo"] ?? "")) === "paola.moralesj2005@gmail.com";
+$_SESSION["atenea_skin"] = $isPaolaSkin ? "paola" : "default";
+
 function h($value): string
 {
     return htmlspecialchars((string) ($value ?? ""), ENT_QUOTES, "UTF-8");
@@ -126,7 +129,7 @@ if ($view === "assistant") {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es"<?= $isPaolaSkin ? ' data-skin="paola"' : "" ?>>
 
 <head>
     <meta charset="UTF-8">

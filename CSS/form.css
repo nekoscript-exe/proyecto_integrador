@@ -20,6 +20,28 @@ html[data-theme="light"]{
     --shadow: 0 18px 40px rgba(13,23,36,0.08);
 }
 
+html[data-skin="paola"]{
+    --bg-main: #1b0b16;
+    --bg-soft: #2a1022;
+    --text-main: #fff7fb;
+    --text-soft: #f3c9dc;
+    --accent: #ff8fc1;
+    --surface: rgba(255,230,240,0.08);
+    --line: rgba(255,186,216,0.18);
+    --shadow: 0 18px 40px rgba(72,10,45,0.3);
+}
+
+html[data-theme="light"][data-skin="paola"]{
+    --bg-main: #fff3f8;
+    --bg-soft: #ffffff;
+    --text-main: #351427;
+    --text-soft: #765469;
+    --accent: #d63384;
+    --surface: rgba(255,255,255,0.9);
+    --line: rgba(180,66,122,0.16);
+    --shadow: 0 18px 40px rgba(130,30,82,0.11);
+}
+
 *{
     margin: 0;
     padding: 0;
@@ -31,6 +53,18 @@ body{
     min-height: 100vh;
     background: radial-gradient(circle at 0% 0%, rgba(0,217,255,0.12), transparent 30%), var(--bg-main);
     color: var(--text-main);
+}
+
+html[data-skin="paola"] body{
+    background:
+        radial-gradient(circle at 0% 0%, rgba(255,143,193,0.2), transparent 30%),
+        linear-gradient(135deg, var(--bg-main), var(--bg-soft));
+}
+
+html[data-theme="light"][data-skin="paola"] body{
+    background:
+        radial-gradient(circle at 0% 0%, rgba(214,51,132,0.12), transparent 30%),
+        linear-gradient(135deg, #fff3f8, #ffffff);
 }
 
 html{
@@ -66,6 +100,14 @@ html[data-theme="light"] .left-panel{
     background: linear-gradient(135deg, rgba(0,107,159,0.12), var(--bg-soft));
 }
 
+html[data-skin="paola"] .left-panel{
+    background: linear-gradient(135deg, rgba(255,143,193,0.18), #1b0b16);
+}
+
+html[data-theme="light"][data-skin="paola"] .left-panel{
+    background: linear-gradient(135deg, rgba(214,51,132,0.1), #ffffff);
+}
+
 .overlay{
     position: absolute;
     width: 100%;
@@ -83,6 +125,24 @@ html[data-theme="light"] .overlay{
     radial-gradient(
         circle at top left,
         rgba(0,107,159,0.16),
+        transparent 40%
+    );
+}
+
+html[data-skin="paola"] .overlay{
+    background:
+    radial-gradient(
+        circle at top left,
+        rgba(255,143,193,0.24),
+        transparent 40%
+    );
+}
+
+html[data-theme="light"][data-skin="paola"] .overlay{
+    background:
+    radial-gradient(
+        circle at top left,
+        rgba(214,51,132,0.14),
         transparent 40%
     );
 }
