@@ -1,0 +1,218 @@
+{
+  "generated_at": "2026-07-01T00:07:53.583326",
+  "source": "Reportes oficiales de Indicadores de Eficiencia Educativa, Queretaro",
+  "kpis": {
+    "periodo_inicial": "2020-2021",
+    "periodo_final": "2024-2025",
+    "archivos": 10,
+    "registros": 4561,
+    "escuelas_unicas": 714,
+    "municipios": 18,
+    "matricula_ultimo_periodo": 214287,
+    "riesgo_ultimo_periodo": 43.43,
+    "reprobacion_ultimo_periodo": 8.09,
+    "desercion_ultimo_periodo": 6.12
+  },
+  "charts": {
+    "trend": "DATASETS/processed/charts/riesgo_por_periodo.png",
+    "factors": "DATASETS/processed/charts/factores_ultimo_periodo.png",
+    "margin": "DATASETS/processed/charts/marginacion_pastel.png",
+    "map": "DATASETS/processed/charts/mapa_riesgo_municipal.png"
+  },
+  "period_summary": [
+    {
+      "periodo": "2020-2021",
+      "nivel_reporte": "Media superior",
+      "escuelas": 308.0,
+      "matricula": 79283.0,
+      "reprobados": 11615.0,
+      "desertores": 13773.0,
+      "reprobacion_pct": 14.65,
+      "desercion_pct": 16.0,
+      "eficiencia_terminal_pct": 66.12,
+      "riesgo_score": 74.31
+    },
+    {
+      "periodo": "2020-2021",
+      "nivel_reporte": "Secundaria",
+      "escuelas": 565.0,
+      "matricula": 119747.0,
+      "reprobados": 837.0,
+      "desertores": 2521.0,
+      "reprobacion_pct": 0.7,
+      "desercion_pct": 3.04,
+      "eficiencia_terminal_pct": 90.14,
+      "riesgo_score": 17.41
+    },
+    {
+      "periodo": "2021-2022",
+      "nivel_reporte": "Media superior",
+      "escuelas": 316.0,
+      "matricula": 78590.0,
+      "reprobados": 12464.0,
+      "desertores": 9898.0,
+      "reprobacion_pct": 15.86,
+      "desercion_pct": 12.45,
+      "eficiencia_terminal_pct": null,
+      "riesgo_score": 60.81
+    },
+    {
+      "periodo": "2021-2022",
+      "nivel_reporte": "Secundaria",
+      "escuelas": 585.0,
+      "matricula": 116692.0,
+      "reprobados": 532.0,
+      "desertores": 6372.0,
+      "reprobacion_pct": 0.46,
+      "desercion_pct": 5.6,
+      "eficiencia_terminal_pct": 88.19,
+      "riesgo_score": 25.24
+    },
+    {
+      "periodo": "2022-2023",
+      "nivel_reporte": "Media superior",
+      "escuelas": 321.0,
+      "matricula": 85036.0,
+      "reprobados": 15664.0,
+      "desertores": 0.0,
+      "reprobacion_pct": 18.42,
+      "desercion_pct": 12.16,
+      "eficiencia_terminal_pct": null,
+      "riesgo_score": 64.88
+    },
+    {
+      "periodo": "2022-2023",
+      "nivel_reporte": "Secundaria",
+      "escuelas": 585.0,
+      "matricula": 117799.0,
+      "reprobados": 6150.0,
+      "desertores": 3930.0,
+      "reprobacion_pct": 5.22,
+      "desercion_pct": 4.08,
+      "eficiencia_terminal_pct": 87.1,
+      "riesgo_score": 32.09
+    },
+    {
+      "periodo": "2023-2024",
+      "nivel_reporte": "Media superior",
+      "escuelas": 319.0,
+      "matricula": 89320.0,
+      "reprobados": 13096.0,
+      "desertores": 8683.0,
+      "reprobacion_pct": 14.66,
+      "desercion_pct": 10.27,
+      "eficiencia_terminal_pct": 73.7,
+      "riesgo_score": 66.91
+    },
+    {
+      "periodo": "2023-2024",
+      "nivel_reporte": "Secundaria",
+      "escuelas": 608.0,
+      "matricula": 119800.0,
+      "reprobados": 2075.0,
+      "desertores": 4336.0,
+      "reprobacion_pct": 4.09,
+      "desercion_pct": 4.08,
+      "eficiencia_terminal_pct": 88.17,
+      "riesgo_score": 29.26
+    },
+    {
+      "periodo": "2024-2025",
+      "nivel_reporte": "Media superior",
+      "escuelas": 328.0,
+      "matricula": 92739.0,
+      "reprobados": 12028.0,
+      "desertores": 5569.0,
+      "reprobacion_pct": 12.97,
+      "desercion_pct": 9.12,
+      "eficiencia_terminal_pct": 74.39,
+      "riesgo_score": 61.41
+    },
+    {
+      "periodo": "2024-2025",
+      "nivel_reporte": "Secundaria",
+      "escuelas": 626.0,
+      "matricula": 121548.0,
+      "reprobados": 5307.0,
+      "desertores": 4138.0,
+      "reprobacion_pct": 4.37,
+      "desercion_pct": 3.83,
+      "eficiencia_terminal_pct": 87.2,
+      "riesgo_score": 29.72
+    }
+  ],
+  "top_municipalities": [
+    {
+      "municipio_normalizado": "PEDRO ESCOBEDO",
+      "municipio": "Pedro Escobedo",
+      "escuelas": 100,
+      "matricula": 34769,
+      "reprobacion_pct": 8.15,
+      "desercion_pct": 8.07,
+      "riesgo_score": 49.82
+    },
+    {
+      "municipio_normalizado": "EL MARQUES",
+      "municipio": "El Marques",
+      "escuelas": 250,
+      "matricula": 69397,
+      "reprobacion_pct": 7.96,
+      "desercion_pct": 8.58,
+      "riesgo_score": 48.62
+    },
+    {
+      "municipio_normalizado": "COLON",
+      "municipio": "Colon",
+      "escuelas": 159,
+      "matricula": 26115,
+      "reprobacion_pct": 5.74,
+      "desercion_pct": 8.21,
+      "riesgo_score": 45.8
+    },
+    {
+      "municipio_normalizado": "QUERETARO",
+      "municipio": "Queretaro",
+      "escuelas": 1528,
+      "matricula": 461808,
+      "reprobacion_pct": 9.66,
+      "desercion_pct": 7.72,
+      "riesgo_score": 44.17
+    },
+    {
+      "municipio_normalizado": "TEQUISQUIAPAN",
+      "municipio": "Tequisquiapan",
+      "escuelas": 141,
+      "matricula": 37445,
+      "reprobacion_pct": 7.8,
+      "desercion_pct": 7.24,
+      "riesgo_score": 44.15
+    },
+    {
+      "municipio_normalizado": "TOLIMAN",
+      "municipio": "Toliman",
+      "escuelas": 112,
+      "matricula": 14486,
+      "reprobacion_pct": 5.92,
+      "desercion_pct": 7.56,
+      "riesgo_score": 43.15
+    },
+    {
+      "municipio_normalizado": "CORREGIDORA",
+      "municipio": "Corregidora",
+      "escuelas": 325,
+      "matricula": 90967,
+      "reprobacion_pct": 9.27,
+      "desercion_pct": 6.19,
+      "riesgo_score": 43.1
+    },
+    {
+      "municipio_normalizado": "HUIMILPAN",
+      "municipio": "Huimilpan",
+      "escuelas": 116,
+      "matricula": 15224,
+      "reprobacion_pct": 4.72,
+      "desercion_pct": 7.44,
+      "riesgo_score": 42.4
+    }
+  ]
+}

@@ -4,6 +4,33 @@ Esta carpeta contiene utilidades para analizar datos academicos fuera del dashbo
 
 ## Scripts disponibles
 
+### `process_official_datasets.py`
+
+Procesa los archivos XLSX reales ubicados en `DATASETS`, limpia sus encabezados y genera una salida lista para el LandingPage.
+
+```bash
+python3 PYTHON/process_official_datasets.py
+```
+
+El flujo aplicado es:
+
+1. Ingesta de XLSX oficiales por periodo escolar.
+2. Deteccion de encabezados reales dentro de hojas con formato institucional.
+3. Limpieza de textos, municipios, columnas numericas y valores faltantes.
+4. Clasificacion de faltantes como `NULL` en el JSON cuando no hay dato valido.
+5. Calculo de indicadores ponderados por matricula: reprobacion, desercion, eficiencia terminal y riesgo.
+6. Generacion de CSV limpio, JSON para PHP, graficas PNG y notebook.
+
+Archivos generados:
+
+- `DATASETS/processed/official_education_clean.csv`
+- `DATASETS/processed/landing_metrics.json`
+- `DATASETS/processed/charts/riesgo_por_periodo.png`
+- `DATASETS/processed/charts/factores_ultimo_periodo.png`
+- `DATASETS/processed/charts/marginacion_pastel.png`
+- `DATASETS/processed/charts/mapa_riesgo_municipal.png`
+- `Atenea_Datasets_Oficiales.ipynb`
+
 ### `risk_analysis.py`
 
 Lee la base de datos `atenea`, calcula una puntuacion de riesgo por estudiante y exporta un resumen JSON.

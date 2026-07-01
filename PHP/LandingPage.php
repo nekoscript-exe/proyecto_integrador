@@ -1,10 +1,8 @@
 <?php
 require_once("conexion.php");
 require_once("analytics.php");
-require_once("dataset_service.php");
 
 ateneaEnsureAllResults($conn);
-ateneaDatasetEnsureSchema($conn);
 
 $stats = [
     "usuarios" => 0,
@@ -29,16 +27,18 @@ if ($result) {
     $stats = array_merge($stats, $result->fetch_assoc());
 }
 
-$latestDataset = ateneaDatasetCurrentUpload($conn);
-$latestDatasetRows = $latestDataset ? ateneaDatasetRows($conn, (int) $latestDataset["id"], 4) : [];
-$datasetSummaries = $latestDataset
-    ? [
-        ateneaDatasetNumericSummary($conn, (int) $latestDataset["id"], "age", "Edad", "", 0),
-        ateneaDatasetNumericSummary($conn, (int) $latestDataset["id"], "study_hours_per_day", "Horas de estudio", " h", 1),
-        ateneaDatasetNumericSummary($conn, (int) $latestDataset["id"], "attendance_percentage", "Asistencia", "%", 1),
-        ateneaDatasetNumericSummary($conn, (int) $latestDataset["id"], "final_percentage", "Final", "%", 1),
-    ]
-    : [];
+$officialDataPath = dirname(__DIR__) . "/DATASETS/processed/landing_metrics.json";
+$officialData = [];
+
+if (is_file($officialDataPath)) {
+    $officialJson = file_get_contents($officialDataPath);
+    $officialData = json_decode($officialJson ?: "[]", true) ?: [];
+}
+
+$officialKpis = $officialData["kpis"] ?? [];
+$officialCharts = $officialData["charts"] ?? [];
+$periodSummary = $officialData["period_summary"] ?? [];
+$topMunicipalities = $officialData["top_municipalities"] ?? [];
 
 function landingNumber($value, string $suffix = "", string $empty = "0", int $decimals = 1): string
 {
@@ -56,6 +56,11 @@ function landingNumber($value, string $suffix = "", string $empty = "0", int $de
 function landingH($value): string
 {
     return htmlspecialchars((string) ($value ?? ""), ENT_QUOTES, "UTF-8");
+}
+
+function landingAsset($value): string
+{
+    return "../" . ltrim((string) $value, "/");
 }
 ?>
 <!DOCTYPE html>
@@ -92,7 +97,7 @@ function landingH($value): string
         <nav>
             <ul>
                 <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#datos-reales">Datos reales</a></li>
+                <li><a href="#datos-oficiales">Datos oficiales</a></li>
                 <li><a href="#problema">Problemática</a></li>
                 <li><a href="#objetivos">Objetivos</a></li>
                 <li><a href="#estadisticas">Estadísticas</a></li>
@@ -113,13 +118,13 @@ function landingH($value): string
             <span>ODS 4 · EDUCACIÓN DE CALIDAD</span>
 
             <h2>
-                Plataforma inteligente para el análisis del riesgo académico estudiantil
+                Analisis de datos reales para entender el riesgo academico estudiantil
             </h2>
 
             <p>
-                Atenea es una plataforma enfocada en la recopilación y análisis
-                de datos académicos y hábitos estudiantiles, permitiendo
-                identificar patrones relacionados con posibles riesgos académicos.
+                Atenea procesa reportes oficiales de eficiencia educativa, limpia
+                los datos con Python y convierte indicadores como reprobacion,
+                desercion y eficiencia terminal en lecturas faciles de entender.
             </p>
 
             <div class="buttons">
@@ -141,18 +146,18 @@ function landingH($value): string
 
         <div class="hero-card">
 
-            <h3>Factores Analizados</h3>
+            <h3>Ciclo de vida de datos</h3>
 
             <div class="grid">
 
-                <div class="box">Horas de sueño</div>
-                <div class="box">Estrés académico</div>
-                <div class="box">Horas de estudio</div>
-                <div class="box">Uso de redes</div>
-                <div class="box">Asistencia</div>
-                <div class="box">Promedio escolar</div>
-                <div class="box">Tiempo transporte</div>
-                <div class="box">Materias reprobadas</div>
+                <div class="box">Ingesta XLSX</div>
+                <div class="box">Limpieza con pandas</div>
+                <div class="box">Datos faltantes como NULL</div>
+                <div class="box">Indicadores ponderados</div>
+                <div class="box">Graficas de barras</div>
+                <div class="box">Grafica de pastel</div>
+                <div class="box">Mapa municipal</div>
+                <div class="box">Lectura ODS 4</div>
 
             </div>
 
@@ -160,100 +165,163 @@ function landingH($value): string
 
     </section>
 
-    <?php if ($latestDataset): ?>
-        <section class="dataset-preview" id="datos-reales">
-            <div class="dataset-preview__copy">
-                <span>Datos reales</span>
-                <h2>
-                    Un vistazo al dataset estudiantil ya procesado dentro de ATENEA
-                </h2>
-                <p>
-                    La plataforma ya integra un CSV real de rendimiento estudiantil, con datos crudos,
-                    limpieza, analisis y resultados listos para explorar desde el dashboard.
-                </p>
+    <section class="official-data" id="datos-oficiales">
+        <div class="official-data__intro">
+            <span>Datos oficiales</span>
+            <h2>
+                Reportes XLSX procesados para medir riesgo academico con enfoque ODS 4
+            </h2>
+            <p>
+                Se analizaron ciclos escolares de 2020-2021 a 2024-2025. El proceso
+                limpia encabezados combinados, normaliza municipios y transforma
+                datos faltantes en valores NULL para no inventar resultados.
+            </p>
+            <div class="official-data__actions">
+                <a href="../DATASETS/processed/official_education_clean.csv" class="btn-primary" download>Descargar CSV limpio</a>
+                <a href="#estadisticas" class="btn-secondary">Ver impacto</a>
+            </div>
+        </div>
 
-                <div class="dataset-preview__stats">
-                    <article>
-                        <strong><?= landingNumber($latestDataset["filas_clean"] ?? 0) ?></strong>
-                        <small>registros limpios</small>
-                    </article>
-                    <article>
-                        <strong><?= landingNumber($latestDataset["porcentaje_aprobados"] ?? 0, "%") ?></strong>
-                        <small>aprobacion</small>
-                    </article>
-                    <article>
-                        <strong><?= landingNumber($latestDataset["promedio_general"] ?? 0, "%") ?></strong>
-                        <small>promedio general</small>
-                    </article>
-                </div>
-
-                <div class="dataset-preview__actions">
-                    <a href="../PHP/login.php" class="btn-primary">Abrir dashboard</a>
-                    <a href="../PHP/form.php" class="btn-secondary">Crear cuenta</a>
-                </div>
+        <?php if (!empty($officialKpis)): ?>
+            <div class="official-kpis">
+                <article>
+                    <strong><?= landingNumber($officialKpis["archivos"] ?? 0, "", "0", 0) ?></strong>
+                    <small>archivos XLSX</small>
+                </article>
+                <article>
+                    <strong><?= landingNumber($officialKpis["registros"] ?? 0, "", "0", 0) ?></strong>
+                    <small>registros limpios</small>
+                </article>
+                <article>
+                    <strong><?= landingNumber($officialKpis["municipios"] ?? 0, "", "0", 0) ?></strong>
+                    <small>municipios</small>
+                </article>
+                <article>
+                    <strong><?= landingNumber($officialKpis["matricula_ultimo_periodo"] ?? 0, "", "0", 0) ?></strong>
+                    <small>matricula <?= landingH($officialKpis["periodo_final"] ?? "") ?></small>
+                </article>
+                <article>
+                    <strong><?= landingNumber($officialKpis["riesgo_ultimo_periodo"] ?? null, "", "N/A") ?></strong>
+                    <small>riesgo ponderado</small>
+                </article>
+                <article>
+                    <strong><?= landingNumber($officialKpis["desercion_ultimo_periodo"] ?? null, "%", "N/A") ?></strong>
+                    <small>desercion ponderada</small>
+                </article>
             </div>
 
-            <div class="dataset-preview__panel">
-                <div class="dataset-preview__panel-head">
-                    <div>
-                        <p>Ultima carga</p>
-                        <strong><?= landingH($latestDataset["nombre_original"] ?? "Dataset") ?></strong>
+            <div class="official-chart-grid">
+                <?php if (!empty($officialCharts["trend"])): ?>
+                    <article class="official-chart-card official-chart-card--wide">
+                        <div>
+                            <span>Grafica de barras</span>
+                            <h3>Riesgo academico por ciclo escolar</h3>
+                        </div>
+                        <img src="<?= landingH(landingAsset($officialCharts["trend"])) ?>" alt="Grafica de barras del riesgo por periodo">
+                    </article>
+                <?php endif; ?>
+
+                <?php if (!empty($officialCharts["factors"])): ?>
+                    <article class="official-chart-card">
+                        <div>
+                            <span>Factores</span>
+                            <h3>Ultimo ciclo escolar</h3>
+                        </div>
+                        <img src="<?= landingH(landingAsset($officialCharts["factors"])) ?>" alt="Grafica de factores de riesgo">
+                    </article>
+                <?php endif; ?>
+
+                <?php if (!empty($officialCharts["margin"])): ?>
+                    <article class="official-chart-card">
+                        <div>
+                            <span>Pastel</span>
+                            <h3>Marginacion escolar</h3>
+                        </div>
+                        <img src="<?= landingH(landingAsset($officialCharts["margin"])) ?>" alt="Grafica de pastel por marginacion">
+                    </article>
+                <?php endif; ?>
+
+                <?php if (!empty($officialCharts["map"])): ?>
+                    <article class="official-chart-card official-chart-card--wide">
+                        <div>
+                            <span>Mapa</span>
+                            <h3>Riesgo academico municipal en Queretaro</h3>
+                        </div>
+                        <img src="<?= landingH(landingAsset($officialCharts["map"])) ?>" alt="Mapa municipal de riesgo academico">
+                    </article>
+                <?php endif; ?>
+            </div>
+
+            <div class="official-tables">
+                <article>
+                    <div class="official-table-head">
+                        <span>Prioridad municipal</span>
+                        <h3>Municipios con mayor riesgo ponderado</h3>
                     </div>
-                    <a href="../PHP/login.php">Ver completo</a>
-                </div>
-
-                <div class="dataset-preview__bars">
-                    <?php foreach ($datasetSummaries as $summary): ?>
-                        <?php if (!$summary) { continue; } ?>
-                        <?php
-                            $maxValue = (float) ($summary["max"] ?? 0);
-                            $avgValue = (float) ($summary["avg"] ?? 0);
-                            $percent = $maxValue > 0 ? round(($avgValue / $maxValue) * 100, 2) : 0;
-                        ?>
-                        <article>
-                            <div class="dataset-preview__bars-top">
-                                <strong><?= landingH($summary["label"]) ?></strong>
-                                <span>
-                                    <?= landingNumber($summary["min"] ?? 0, "", "0", $summary["decimals"] ?? 1) ?>
-                                    -
-                                    <?= landingNumber($summary["max"] ?? 0, $summary["unit"], "0", $summary["decimals"] ?? 1) ?>
-                                </span>
-                            </div>
-                            <div class="dataset-preview__track">
-                                <span style="width: <?= max(5, min(100, $percent)) ?>%"></span>
-                            </div>
-                            <small>Promedio: <?= landingNumber($summary["avg"] ?? 0, $summary["unit"], "0", $summary["decimals"] ?? 1) ?></small>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if (count($latestDatasetRows) > 0): ?>
-                    <div class="dataset-preview__table">
+                    <div class="official-table-wrap">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Edad</th>
-                                    <th>Asistencia</th>
-                                    <th>Final</th>
+                                    <th>Municipio</th>
+                                    <th>Matricula</th>
+                                    <th>Reprobacion</th>
+                                    <th>Desercion</th>
+                                    <th>Riesgo</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($latestDatasetRows as $row): ?>
+                                <?php foreach ($topMunicipalities as $municipality): ?>
                                     <tr>
-                                        <td><?= landingH($row["student_id"]) ?></td>
-                                        <td><?= landingNumber($row["age"], "", 0) ?></td>
-                                        <td><?= landingNumber($row["attendance_percentage"], "%") ?></td>
-                                        <td><?= landingNumber($row["final_percentage"], "%") ?></td>
+                                        <td><?= landingH($municipality["municipio"] ?? "") ?></td>
+                                        <td><?= landingNumber($municipality["matricula"] ?? null, "", "N/A", 0) ?></td>
+                                        <td><?= landingNumber($municipality["reprobacion_pct"] ?? null, "%", "N/A") ?></td>
+                                        <td><?= landingNumber($municipality["desercion_pct"] ?? null, "%", "N/A") ?></td>
+                                        <td><?= landingNumber($municipality["riesgo_score"] ?? null, "", "N/A") ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
-                <?php endif; ?>
+                </article>
+
+                <article>
+                    <div class="official-table-head">
+                        <span>Resumen historico</span>
+                        <h3>Ciclos escolares procesados</h3>
+                    </div>
+                    <div class="official-table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Periodo</th>
+                                    <th>Nivel</th>
+                                    <th>Escuelas</th>
+                                    <th>Matricula</th>
+                                    <th>Riesgo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($periodSummary as $period): ?>
+                                    <tr>
+                                        <td><?= landingH($period["periodo"] ?? "") ?></td>
+                                        <td><?= landingH($period["nivel_reporte"] ?? "") ?></td>
+                                        <td><?= landingNumber($period["escuelas"] ?? null, "", "N/A", 0) ?></td>
+                                        <td><?= landingNumber($period["matricula"] ?? null, "", "N/A", 0) ?></td>
+                                        <td><?= landingNumber($period["riesgo_score"] ?? null, "", "N/A") ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
             </div>
-        </section>
-    <?php endif; ?>
+        <?php else: ?>
+            <div class="official-empty">
+                <h3>Los datos oficiales aun no estan procesados.</h3>
+                <p>Ejecuta <strong>python3 PYTHON/process_official_datasets.py</strong> para generar el CSV limpio, JSON y graficas.</p>
+            </div>
+        <?php endif; ?>
+    </section>
 
     <!-- Problematica -->
     <section class="problem" id="problema">
@@ -263,10 +331,10 @@ function landingH($value): string
         </h2>
 
         <p>
-            Muchos estudiantes presentan problemas de rendimiento académico
-            debido a factores personales, sociales y académicos.
-            Actualmente, gran parte de esta información no es recopilada
-            ni analizada de forma estructurada.
+            Los reportes educativos suelen existir como hojas de calculo
+            dificiles de leer. Atenea convierte esos archivos en informacion
+            limpia, comparable y visual para detectar zonas donde la calidad
+            educativa necesita seguimiento.
         </p>
 
     </section>
@@ -281,26 +349,26 @@ function landingH($value): string
         <div class="cards">
 
             <div class="card">
-                <h4>Recolección de Datos</h4>
+                <h4>Ingesta de Datos</h4>
 
                 <p>
-                    Obtener información estudiantil mediante formularios digitales.
+                    Leer archivos XLSX oficiales por periodo escolar y nivel educativo.
                 </p>
             </div>
 
             <div class="card">
-                <h4>Análisis de Información</h4>
+                <h4>Limpieza y Transformacion</h4>
 
                 <p>
-                    Identificar patrones relacionados con riesgo académico.
+                    Normalizar encabezados, municipios, columnas y valores faltantes.
                 </p>
             </div>
 
             <div class="card">
-                <h4>Visualización</h4>
+                <h4>Analisis Visual</h4>
 
                 <p>
-                    Mostrar estadísticas mediante una plataforma web.
+                    Mostrar tendencias, factores de riesgo y mapas para tomar decisiones.
                 </p>
             </div>
 
@@ -312,29 +380,29 @@ function landingH($value): string
     <section class="stats" id="estadisticas">
 
         <h2 class="section-title">
-            Datos Analizados
+            Impacto del Proyecto
         </h2>
 
         <div class="stats-container">
 
             <div class="stat-box">
-                <h3><?= landingNumber($stats["usuarios"]) ?></h3>
-                <p>Estudiantes registrados</p>
+                <h3><?= landingNumber($officialKpis["registros"] ?? 0, "", "0", 0) ?></h3>
+                <p>Registros oficiales procesados</p>
             </div>
 
             <div class="stat-box">
-                <h3><?= landingNumber($stats["encuestas"]) ?></h3>
-                <p>Encuestas respondidas</p>
+                <h3><?= landingNumber($officialKpis["escuelas_unicas"] ?? 0, "", "0", 0) ?></h3>
+                <p>Escuelas identificadas</p>
             </div>
 
             <div class="stat-box">
-                <h3><?= landingNumber($stats["promedio"], "", "N/A") ?></h3>
-                <p>Promedio académico global</p>
+                <h3><?= landingNumber($officialKpis["municipios"] ?? 0, "", "0", 0) ?></h3>
+                <p>Municipios analizados</p>
             </div>
 
             <div class="stat-box">
-                <h3><?= landingNumber($stats["riesgo_alto"]) ?></h3>
-                <p>Perfiles con riesgo alto detectado</p>
+                <h3><?= landingNumber($officialKpis["riesgo_ultimo_periodo"] ?? null, "", "N/A") ?></h3>
+                <p>Riesgo ponderado mas reciente</p>
             </div>
 
         </div>
@@ -356,8 +424,7 @@ function landingH($value): string
             <h4>Recolección</h4>
 
             <p>
-                Los estudiantes responden formularios relacionados con
-                hábitos, rendimiento y entorno académico.
+                Se toman los archivos XLSX oficiales agrupados por ciclo escolar.
             </p>
         </div>
 
@@ -367,8 +434,7 @@ function landingH($value): string
             <h4>Procesamiento</h4>
 
             <p>
-                La información es organizada y almacenada en una base
-                de datos para su análisis.
+                Python limpia encabezados combinados, datos faltantes y columnas clave.
             </p>
         </div>
 
@@ -378,8 +444,7 @@ function landingH($value): string
             <h4>Análisis</h4>
 
             <p>
-                Atenea identifica patrones asociados a posibles riesgos
-                académicos estudiantiles.
+                Se calculan reprobacion, desercion, eficiencia terminal y riesgo.
             </p>
         </div>
 
@@ -389,8 +454,7 @@ function landingH($value): string
             <h4>Visualización</h4>
 
             <p>
-                Los resultados se muestran mediante estadísticas y paneles
-                interactivos.
+                La pagina presenta KPIs, graficas, tablas y un mapa municipal.
             </p>
         </div>
 
@@ -410,15 +474,13 @@ function landingH($value): string
         </h2>
 
         <p>
-            Atenea busca combinar análisis de datos, bases de datos y
-            tecnologías web para desarrollar una herramienta capaz de
-            apoyar el monitoreo académico estudiantil.
+            Atenea combina Python, pandas, visualizacion de datos, PHP y
+            MySQL para convertir datos educativos reales en informacion clara.
         </p>
 
         <p>
-            El proyecto está alineado con el Objetivo de Desarrollo
-            Sostenible número 4 de la Agenda 2030:
-            Educación de Calidad.
+            El proyecto se alinea con el Objetivo de Desarrollo Sostenible
+            numero 4 al facilitar el seguimiento de indicadores educativos.
         </p>
 
     </div>
@@ -427,17 +489,17 @@ function landingH($value): string
 
         <div class="mini-card">
             <h3>Base de Datos</h3>
-            <p>Almacenamiento estructurado de información estudiantil.</p>
+            <p>Datos del sistema y resultados listos para futuras consultas.</p>
         </div>
 
         <div class="mini-card">
-            <h3>Análisis</h3>
-            <p><?= landingNumber($stats["riesgo_bajo"]) ?> perfiles en riesgo bajo y <?= landingNumber($stats["riesgo_medio"]) ?> en seguimiento medio.</p>
+            <h3>Python Analytics</h3>
+            <p><?= landingNumber($officialKpis["archivos"] ?? 0, "", "0", 0) ?> archivos oficiales convertidos en un dataset limpio.</p>
         </div>
 
         <div class="mini-card">
-            <h3>Web Platform</h3>
-            <p>Acceso rápido y visualización desde cualquier lugar.</p>
+            <h3>Visualizacion</h3>
+            <p>Graficas de barras, pastel y mapa para explicar los hallazgos.</p>
         </div>
 
     </div>

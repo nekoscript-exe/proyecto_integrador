@@ -4,7 +4,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once("conexion.php");
 require_once("analytics.php");
-require_once("dataset_service.php");
 
 // Si no hay sesion activa, mandamos al login
 if (!isset($_SESSION["usuario_id"])) {
@@ -18,7 +17,7 @@ if (($_SESSION["usuario_rol"] ?? "usuario") === "admin") {
 }
 
 $view = $_GET["v"] ?? "home";
-$allowedViews = ["home", "profile", "ranking", "analysis", "data", "plan", "community", "activity", "assistant"];
+$allowedViews = ["home", "profile", "ranking", "analysis", "plan", "community", "activity", "assistant"];
 
 if (!in_array($view, $allowedViews, true)) {
     $view = "home";
@@ -26,7 +25,6 @@ if (!in_array($view, $allowedViews, true)) {
 
 $userId = (int) $_SESSION["usuario_id"];
 ateneaEnsureAllResults($conn);
-ateneaDatasetEnsureSchema($conn);
 $currentUser = [
     "nombre" => $_SESSION["usuario_nombre"] ?? "Estudiante",
     "correo" => $_SESSION["usuario_correo"] ?? "",
@@ -108,7 +106,6 @@ $labels = [
     "profile" => "Perfil",
     "ranking" => "Ranking",
     "analysis" => "Analisis",
-    "data" => "Datos reales",
     "plan" => "Plan",
     "community" => "Comunidad",
     "activity" => "Actividad",
@@ -159,9 +156,6 @@ if ($view === "assistant") {
                 <span class="nav-group">Explorar</span>
                 <a class="<?= $view === "home" ? "active" : "" ?>" href="dashboard.php?v=home">
                     <span>Inicio</span>
-                </a>
-                <a class="<?= $view === "data" ? "active" : "" ?>" href="dashboard.php?v=data">
-                    <span>Datos reales</span>
                 </a>
                 <a class="<?= $view === "ranking" ? "active" : "" ?>" href="dashboard.php?v=ranking">
                     <span>Ranking</span>
@@ -238,9 +232,6 @@ if ($view === "assistant") {
                     break;
                 case "analysis":
                     include "../VIEWS/analysis.php";
-                    break;
-                case "data":
-                    include "../VIEWS/data.php";
                     break;
                 case "plan":
                     include "../VIEWS/plan.php";
