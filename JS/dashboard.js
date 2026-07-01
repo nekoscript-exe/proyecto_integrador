@@ -1,5 +1,6 @@
 const cards = document.querySelectorAll(".student-card, .ranking-row, .metric-card");
-const navToggle = document.querySelector("[data-nav-toggle]");
+const navToggles = document.querySelectorAll("[data-nav-toggle]");
+const navToggle = navToggles[0] || null;
 const navOverlay = document.querySelector("[data-nav-overlay]");
 const sidebar = document.querySelector(".sidebar");
 
@@ -63,28 +64,28 @@ document.querySelectorAll("[data-column-focus]").forEach((button) => {
 
 const closeMobileNav = () => {
     document.body.classList.remove("dashboard-nav-open");
-    if (navToggle) {
-        navToggle.setAttribute("aria-expanded", "false");
-        navToggle.setAttribute("aria-label", "Abrir menu");
-    }
+    navToggles.forEach((toggle) => {
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Abrir menu");
+    });
 };
 
 const openMobileNav = () => {
     document.body.classList.add("dashboard-nav-open");
-    if (navToggle) {
-        navToggle.setAttribute("aria-expanded", "true");
-        navToggle.setAttribute("aria-label", "Cerrar menu");
-    }
+    navToggles.forEach((toggle) => {
+        toggle.setAttribute("aria-expanded", "true");
+        toggle.setAttribute("aria-label", "Cerrar menu");
+    });
 };
 
-if (navToggle && sidebar) {
-    navToggle.addEventListener("click", () => {
+if (navToggles.length && sidebar) {
+    navToggles.forEach((toggle) => toggle.addEventListener("click", () => {
         if (document.body.classList.contains("dashboard-nav-open")) {
             closeMobileNav();
         } else {
             openMobileNav();
         }
-    });
+    }));
 }
 
 if (navOverlay) {

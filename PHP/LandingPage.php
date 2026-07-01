@@ -94,7 +94,20 @@ function landingAsset($value): string
             <img src="../IMG/logo.png" alt="Logo Atenea">
         </div>
 
-        <nav>
+        <button
+            type="button"
+            class="landing-menu-toggle"
+            data-landing-menu-toggle
+            aria-controls="landingNav"
+            aria-expanded="false"
+            aria-label="Abrir menu"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="landingNav">
             <ul>
                 <li><a href="#inicio">Inicio</a></li>
                 <li><a href="#datos-oficiales">Datos oficiales</a></li>
@@ -534,6 +547,7 @@ function landingAsset($value): string
     </footer>
 
     <script src="../JS/theme.js"></script>
+    <script src="../JS/landing.js"></script>
 
 </body>
 

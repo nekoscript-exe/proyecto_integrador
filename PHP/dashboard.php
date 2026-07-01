@@ -185,6 +185,13 @@ if ($view === "assistant") {
                 </a>
             </nav>
 
+            <div class="mobile-sidebar-actions">
+                <button type="button" class="theme-toggle" data-theme-toggle>Modo oscuro</button>
+                <?php if ($topAction): ?>
+                    <a class="primary-action primary-action--small" href="<?= h($topAction["href"]) ?>"><?= h($topAction["label"]) ?></a>
+                <?php endif; ?>
+            </div>
+
             <div class="sidebar-card">
                 <div class="mini-avatar"><?= h(initials($currentUser["nombre"] ?? "")) ?></div>
                 <div>
@@ -254,6 +261,20 @@ if ($view === "assistant") {
     </div>
 
     <div class="dashboard-overlay" data-nav-overlay></div>
+
+    <nav class="mobile-bottom-nav" aria-label="Navegacion movil">
+        <a class="<?= $view === "home" ? "active" : "" ?>" href="dashboard.php?v=home">Inicio</a>
+        <a class="<?= $view === "ranking" ? "active" : "" ?>" href="dashboard.php?v=ranking">Ranking</a>
+        <a class="<?= $view === "analysis" ? "active" : "" ?>" href="dashboard.php?v=analysis">Analisis</a>
+        <a class="<?= $view === "profile" ? "active" : "" ?>" href="dashboard.php?v=profile">Perfil</a>
+        <button
+            type="button"
+            data-nav-toggle
+            aria-controls="dashboardSidebar"
+            aria-expanded="false"
+            aria-label="Abrir menu"
+        >Menu</button>
+    </nav>
 
     <script src="../JS/theme.js"></script>
     <script src="../JS/dashboard.js"></script>
