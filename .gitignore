@@ -13,3 +13,15 @@ DATASET/uploads/
 
 # Archivos de información local
 INFO/
+
+# Archivos temporales de LibreOffice
+.~lock*
+
+# Archivos temporales de Microsoft Office
+~$*
+
+# Windows
+Thumbs.db
+
+# macOS
+.DS_Store
