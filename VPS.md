@@ -122,7 +122,43 @@ HTTP/1.1 200 OK
 5. Cambia la contrasena.
 6. Intenta usar el mismo enlace otra vez; debe fallar.
 
-## 11. Revisar logs si falla
+## 11. Probar Centro de Comunicaciones
+
+1. Entra como administrador.
+2. Abre `Panel de Administracion`.
+3. Ve a `Centro de Comunicaciones`.
+4. Escribe un asunto corto.
+5. Selecciona primero `Usuario especifico` para hacer una prueba controlada.
+6. Escribe el contenido y usa `Vista previa`.
+7. Confirma `Enviar comunicado`.
+8. Revisa el historial de campanas.
+9. Si quedan pendientes, pulsa `Procesar lote`.
+
+El envio usa el mismo SMTP de `PHP/mailer.php`; no se configura otra cuenta ni se duplica la contrasena.
+
+## 12. Procesar lotes manualmente
+
+Por ahora los lotes se procesan desde el Dashboard Admin. Cada lote intenta enviar hasta 10 correos. Esto reduce el riesgo de timeouts y hace mas facil revisar errores por destinatario.
+
+Si mas adelante quieres automatizarlo, se puede crear un worker CLI con cron que llame a la misma logica de `PHP/mail_campaign_service.php`.
+
+## 13. Limites de Gmail
+
+Gmail puede limitar temporalmente la cuenta si detecta demasiados envios, muchos destinatarios o contenido sospechoso. Recomendaciones:
+
+- enviar comunicados por lotes pequenos;
+- probar primero con usuario especifico;
+- evitar asuntos tipo spam;
+- no usar CC/BCC masivo;
+- revisar fallos en el historial de campanas;
+- configurar bien la cuenta remitente y autenticacion del dominio si se escala el envio.
+
+Consulta tambien la documentacion oficial de Google sobre limites y buenas practicas:
+
+- https://support.google.com/mail/answer/22839
+- https://support.google.com/mail/answer/81126
+
+## 14. Revisar logs si falla
 
 ```bash
 sudo tail -50 /var/log/apache2/ateneanalyticsai_error.log

@@ -150,6 +150,11 @@ header p {
     border: 1px solid rgba(255, 122, 89, 0.35);
 }
 
+.alert--info {
+    background: rgba(0, 217, 255, 0.12);
+    border-color: rgba(0, 217, 255, 0.34);
+}
+
 .metrics {
     margin-top: 20px;
     display: grid;
@@ -365,6 +370,222 @@ button {
     font-weight: 700;
 }
 
+.mail-center-panel {
+    border-color: rgba(0, 217, 255, 0.22);
+}
+
+.mail-composer {
+    margin-top: 12px;
+}
+
+.mail-composer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    gap: 16px;
+}
+
+.mail-composer__main,
+.mail-composer__side article,
+.mail-preview,
+.mail-recipient-detail {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.mail-composer__main {
+    padding: 14px;
+}
+
+.mail-composer__side {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+}
+
+.mail-composer__side article {
+    padding: 14px;
+}
+
+.mail-composer__side small,
+.mail-scope-option small {
+    color: var(--text-soft);
+}
+
+.mail-composer__side strong {
+    display: block;
+    margin-top: 6px;
+    color: var(--accent);
+    font-size: 1.45rem;
+}
+
+.mail-composer__side span {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.mail-scope-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.mail-scope-option {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+}
+
+.mail-scope-option input {
+    width: auto;
+}
+
+.mail-scope-option:has(input:checked) {
+    border-color: var(--accent);
+    background: rgba(0, 217, 255, 0.1);
+}
+
+.mail-scope-option span {
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.mail-specific {
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+}
+
+.mail-specific.is-visible {
+    display: grid;
+    gap: 8px;
+}
+
+.mail-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.mail-toolbar button {
+    min-width: 42px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+}
+
+.mail-toolbar button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.mail-editor {
+    min-height: 220px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+    line-height: 1.55;
+    outline: none;
+}
+
+.mail-editor:focus {
+    border-color: var(--accent);
+}
+
+.mail-editor ul,
+.mail-editor ol {
+    padding-left: 22px;
+}
+
+.mail-hidden-body {
+    display: none;
+}
+
+.mail-actions,
+.mail-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mail-preview {
+    margin-top: 16px;
+    padding: 14px;
+}
+
+.mail-preview iframe {
+    width: 100%;
+    min-height: 420px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.mail-history {
+    margin-top: 18px;
+}
+
+.mail-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-soft);
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.mail-status--completed,
+.mail-status--sent {
+    border-color: rgba(142, 254, 207, 0.38);
+    background: rgba(142, 254, 207, 0.12);
+    color: #8efecf;
+}
+
+.mail-status--queued,
+.mail-status--sending,
+.mail-status--pending {
+    border-color: rgba(0, 217, 255, 0.36);
+    background: rgba(0, 217, 255, 0.12);
+    color: var(--accent);
+}
+
+.mail-status--partial_error,
+.mail-status--failed {
+    border-color: rgba(255, 122, 89, 0.38);
+    background: rgba(255, 122, 89, 0.14);
+    color: #ffb9a9;
+}
+
+.mail-status--cancelled,
+.mail-status--skipped {
+    border-color: rgba(198, 210, 221, 0.28);
+    background: rgba(198, 210, 221, 0.1);
+}
+
+.mail-recipient-detail {
+    margin-top: 16px;
+    padding: 14px;
+}
+
 .table-wrap {
     overflow-x: auto;
     margin-top: 12px;
@@ -415,7 +636,9 @@ td {
     .metrics,
     .users-grid,
     .dataset-admin-grid,
-    .dataset-admin-summary {
+    .dataset-admin-summary,
+    .mail-composer__grid,
+    .mail-scope-grid {
         grid-template-columns: 1fr;
     }
 

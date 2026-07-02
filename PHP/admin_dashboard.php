@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once("conexion.php");
 require_once("analytics.php");
 require_once("security.php");
+require_once("mail_campaign_service.php");
 
 // Solo admins pueden entrar aqui
 if (!isset($_SESSION["usuario_id"])) {
@@ -20,12 +21,21 @@ if (($_SESSION["usuario_rol"] ?? "usuario") !== "admin") {
 
 ateneaEnsureAllResults($conn);
 ateneaEnsureSecuritySchema($conn);
+ateneaEnsureMailCampaignSchema($conn);
 
 $adminId = (int) $_SESSION["usuario_id"];
 $feedback = "";
 $sqlOutput = "";
 $sqlError = "";
 $sqlPreview = [];
+$mailFeedback = "";
+$mailPreview = null;
+$mailDraft = [
+    "subject" => "",
+    "recipient_scope" => "active",
+    "specific_user_id" => 0,
+    "body_html" => "",
+];
 
 function adminH($value): string
 {
@@ -81,10 +91,131 @@ function adminCountCsvRows(string $path): int
     return max(0, $lines - 1);
 }
 
+function adminMailStatusLabel(string $status): string
+{
+    $labels = [
+        "draft" => "Borrador",
+        "queued" => "En cola",
+        "sending" => "Enviando",
+        "completed" => "Completado",
+        "partial_error" => "Con errores",
+        "failed" => "Fallido",
+        "cancelled" => "Cancelado",
+        "pending" => "Pendiente",
+        "sent" => "Enviado",
+        "skipped" => "Omitido",
+    ];
+
+    return $labels[$status] ?? $status;
+}
+
+function adminMailScopeLabel(string $scope): string
+{
+    $labels = [
+        "active" => "Usuarios activos",
+        "all" => "Todos",
+        "admins" => "Administradores",
+        "specific" => "Usuario especifico",
+    ];
+
+    return $labels[$scope] ?? $scope;
+}
+
+function adminMailDraftFromPost(): array
+{
+    return [
+        "subject" => (string) ($_POST["mail_subject"] ?? ""),
+        "recipient_scope" => ateneaMailAllowedScope((string) ($_POST["recipient_scope"] ?? "active")),
+        "specific_user_id" => (int) ($_POST["specific_user_id"] ?? 0),
+        "body_html" => (string) ($_POST["body_html"] ?? ""),
+    ];
+}
+
 $tieneEstado = usuariosTieneEstadoColumna($conn);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $action = $_POST["action"] ?? "";
+
+    if (in_array($action, ["mail_preview", "mail_queue_send"], true)) {
+        $mailDraft = adminMailDraftFromPost();
+        $subject = ateneaMailCleanSubject($mailDraft["subject"]);
+        $bodyHtml = ateneaMailNormalizeHtml($mailDraft["body_html"]);
+        $bodyText = ateneaMailHtmlToText($bodyHtml);
+        $recipients = ateneaMailRecipients(
+            $conn,
+            $mailDraft["recipient_scope"],
+            $mailDraft["recipient_scope"] === "specific" ? (int) $mailDraft["specific_user_id"] : null
+        );
+
+        if ($subject === "" || $bodyText === "") {
+            $mailFeedback = "Escribe asunto y contenido antes de continuar.";
+        } elseif (count($recipients) === 0) {
+            $mailFeedback = "No hay destinatarios validos para este comunicado.";
+        } elseif ($action === "mail_preview") {
+            $mailPreview = [
+                "subject" => $subject,
+                "html" => ateneaMailTemplate($subject, $bodyHtml),
+                "count" => count($recipients),
+                "scope" => adminMailScopeLabel($mailDraft["recipient_scope"]),
+            ];
+            $mailDraft["subject"] = $subject;
+            $mailDraft["body_html"] = $bodyHtml;
+        } else {
+            $created = ateneaMailCreateCampaign(
+                $conn,
+                $adminId,
+                $subject,
+                $mailDraft["recipient_scope"],
+                $bodyHtml,
+                $mailDraft["recipient_scope"] === "specific" ? (int) $mailDraft["specific_user_id"] : null
+            );
+
+            if (empty($created["ok"])) {
+                $mailFeedback = (string) ($created["error"] ?? "No fue posible crear el comunicado.");
+            } else {
+                $campaignId = (int) $created["campaign_id"];
+                $batch = ateneaMailProcessBatch($conn, $campaignId, 10);
+                ateneaLogAdminAction(
+                    $conn,
+                    $adminId,
+                    "Enviar comunicado",
+                    null,
+                    "Campana {$campaignId}. Asunto: " . adminShort($subject, 80) . ". Destinatarios: " . (int) $created["recipient_count"]
+                );
+                $mailFeedback = "Comunicado encolado. Lote inicial: " . (int) ($batch["sent"] ?? 0) . " enviados, " . (int) ($batch["failed"] ?? 0) . " fallidos.";
+                $mailDraft = [
+                    "subject" => "",
+                    "recipient_scope" => "active",
+                    "specific_user_id" => 0,
+                    "body_html" => "",
+                ];
+            }
+        }
+    }
+
+    if ($action === "mail_process_batch") {
+        $campaignId = (int) ($_POST["campaign_id"] ?? 0);
+        $batch = ateneaMailProcessBatch($conn, $campaignId, 10);
+
+        if (empty($batch["ok"])) {
+            $mailFeedback = (string) ($batch["error"] ?? "No fue posible procesar el lote.");
+        } else {
+            ateneaLogAdminAction($conn, $adminId, "Procesar lote de comunicado", null, "Campana {$campaignId}. Procesados: " . (int) $batch["processed"]);
+            $mailFeedback = "Lote procesado: " . (int) $batch["sent"] . " enviados, " . (int) $batch["failed"] . " fallidos.";
+        }
+    }
+
+    if ($action === "mail_cancel_campaign") {
+        $campaignId = (int) ($_POST["campaign_id"] ?? 0);
+        $cancelled = ateneaMailCancelCampaign($conn, $campaignId);
+
+        if (empty($cancelled["ok"])) {
+            $mailFeedback = (string) ($cancelled["error"] ?? "No fue posible cancelar el comunicado.");
+        } else {
+            ateneaLogAdminAction($conn, $adminId, "Cancelar comunicado", null, "Campana {$campaignId}");
+            $mailFeedback = "Comunicado cancelado correctamente.";
+        }
+    }
 
     if ($action === "toggle_block") {
         $targetId = (int) ($_POST["target_id"] ?? 0);
@@ -336,6 +467,17 @@ if (ateneaTableExists($conn, 'admin_historial')) {
         }
     }
 }
+
+$mailCounts = [
+    "active" => count(ateneaMailRecipients($conn, "active")),
+    "all" => count(ateneaMailRecipients($conn, "all")),
+    "admins" => count(ateneaMailRecipients($conn, "admins")),
+];
+
+$specificMailUsers = ateneaMailRecipients($conn, "all");
+$mailCampaigns = ateneaMailCampaigns($conn, 10);
+$selectedMailCampaignId = (int) ($_GET["mail_campaign_id"] ?? ($mailCampaigns[0]["id"] ?? 0));
+$selectedMailRecipients = $selectedMailCampaignId > 0 ? ateneaMailCampaignRecipients($conn, $selectedMailCampaignId, 80) : [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -364,6 +506,7 @@ if (ateneaTableExists($conn, 'admin_historial')) {
             </div>
             <button type="button" class="theme-toggle admin-theme-toggle" data-theme-toggle>Modo oscuro</button>
             <a href="#datasets">Datos oficiales</a>
+            <a href="#comunicaciones">Centro de Comunicaciones</a>
             <a href="logout.php">Cerrar sesion</a>
         </aside>
 
@@ -375,6 +518,9 @@ if (ateneaTableExists($conn, 'admin_historial')) {
 
             <?php if ($feedback !== ""): ?>
                 <div class="alert"><?= adminH($feedback) ?></div>
+            <?php endif; ?>
+            <?php if ($mailFeedback !== ""): ?>
+                <div class="alert alert--info"><?= adminH($mailFeedback) ?></div>
             <?php endif; ?>
 
             <section class="metrics">
@@ -434,6 +580,224 @@ if (ateneaTableExists($conn, 'admin_historial')) {
                     Para actualizar esta informacion, ejecuta desde terminal:
                     <code>python3 PYTHON/process_official_datasets.py</code>
                 </p>
+            </section>
+
+            <section class="panel mail-center-panel" id="comunicaciones">
+                <div class="panel-head">
+                    <div>
+                        <h3>Centro de Comunicaciones</h3>
+                        <p class="meta">Envia comunicados oficiales por correo a usuarios registrados. El envio usa SMTP de ATENEA y se procesa por lotes.</p>
+                    </div>
+                    <span><?= count($mailCampaigns) ?> campanas recientes</span>
+                </div>
+
+                <form method="POST" class="mail-composer" data-mail-form>
+                    <div class="mail-composer__grid">
+                        <div class="mail-composer__main">
+                            <label for="mailSubject">Asunto</label>
+                            <input id="mailSubject" type="text" name="mail_subject" maxlength="180" value="<?= adminH($mailDraft["subject"]) ?>" placeholder="Nueva actualizacion disponible" required>
+
+                            <label>Destinatarios</label>
+                            <div class="mail-scope-grid" data-mail-scopes>
+                                <label class="mail-scope-option">
+                                    <input type="radio" name="recipient_scope" value="active" data-recipient-count="<?= (int) $mailCounts["active"] ?>" <?= $mailDraft["recipient_scope"] === "active" ? "checked" : "" ?>>
+                                    <span>Usuarios activos</span>
+                                    <small><?= (int) $mailCounts["active"] ?> destinatarios</small>
+                                </label>
+                                <label class="mail-scope-option">
+                                    <input type="radio" name="recipient_scope" value="all" data-recipient-count="<?= (int) $mailCounts["all"] ?>" <?= $mailDraft["recipient_scope"] === "all" ? "checked" : "" ?>>
+                                    <span>Todos</span>
+                                    <small><?= (int) $mailCounts["all"] ?> destinatarios</small>
+                                </label>
+                                <label class="mail-scope-option">
+                                    <input type="radio" name="recipient_scope" value="admins" data-recipient-count="<?= (int) $mailCounts["admins"] ?>" <?= $mailDraft["recipient_scope"] === "admins" ? "checked" : "" ?>>
+                                    <span>Administradores</span>
+                                    <small><?= (int) $mailCounts["admins"] ?> destinatarios</small>
+                                </label>
+                                <label class="mail-scope-option">
+                                    <input type="radio" name="recipient_scope" value="specific" data-recipient-count="1" <?= $mailDraft["recipient_scope"] === "specific" ? "checked" : "" ?>>
+                                    <span>Usuario especifico</span>
+                                    <small>Busqueda individual</small>
+                                </label>
+                            </div>
+
+                            <div class="mail-specific <?= $mailDraft["recipient_scope"] === "specific" ? "is-visible" : "" ?>" data-specific-user-wrap>
+                                <label for="mailUserSearch">Buscar por nombre o correo</label>
+                                <input id="mailUserSearch" type="search" placeholder="Filtrar usuarios..." data-user-search>
+                                <select name="specific_user_id" data-specific-user-select>
+                                    <option value="0">Selecciona un usuario</option>
+                                    <?php foreach ($specificMailUsers as $mailUser): ?>
+                                        <option
+                                            value="<?= (int) $mailUser["usuario_id"] ?>"
+                                            data-search="<?= adminH(strtolower($mailUser["name"] . " " . $mailUser["email"])) ?>"
+                                            <?= (int) $mailDraft["specific_user_id"] === (int) $mailUser["usuario_id"] ? "selected" : "" ?>
+                                        >
+                                            <?= adminH($mailUser["name"]) ?> · <?= adminH($mailUser["email"]) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <label>Contenido</label>
+                            <div class="mail-toolbar" aria-label="Herramientas del editor">
+                                <button type="button" data-format-command="bold"><strong>B</strong></button>
+                                <button type="button" data-format-command="italic"><em>I</em></button>
+                                <button type="button" data-format-block="h2">H2</button>
+                                <button type="button" data-format-block="h3">H3</button>
+                                <button type="button" data-format-command="insertUnorderedList">Lista</button>
+                                <button type="button" data-format-link>Enlace</button>
+                            </div>
+                            <div class="mail-editor" contenteditable="true" data-mail-editor><?= ateneaMailNormalizeHtml($mailDraft["body_html"]) ?></div>
+                            <textarea name="body_html" class="mail-hidden-body" data-mail-body><?= adminH(ateneaMailNormalizeHtml($mailDraft["body_html"])) ?></textarea>
+
+                            <div class="mail-actions">
+                                <button type="submit" name="action" value="mail_preview">Vista previa</button>
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="mail_queue_send"
+                                    data-mail-send
+                                    data-confirm="Deseas enviar este comunicado?"
+                                >
+                                    Enviar comunicado
+                                </button>
+                            </div>
+                        </div>
+
+                        <aside class="mail-composer__side">
+                            <article>
+                                <small>Destinatarios estimados</small>
+                                <strong data-mail-count><?= (int) ($mailCounts[$mailDraft["recipient_scope"]] ?? 0) ?></strong>
+                                <span>Se enviara un correo por destinatario, sin CC ni BCC masivo.</span>
+                            </article>
+                            <article>
+                                <small>Lote inicial</small>
+                                <strong>10</strong>
+                                <span>Despues puedes procesar mas lotes desde el historial.</span>
+                            </article>
+                            <article>
+                                <small>Canal</small>
+                                <strong>Email</strong>
+                                <span>SMTP centralizado con PHPMailer.</span>
+                            </article>
+                        </aside>
+                    </div>
+                </form>
+
+                <?php if ($mailPreview): ?>
+                    <div class="mail-preview">
+                        <div class="panel-head">
+                            <div>
+                                <h3>Vista previa</h3>
+                                <p class="meta"><?= adminH($mailPreview["scope"]) ?> · <?= (int) $mailPreview["count"] ?> destinatarios</p>
+                            </div>
+                            <span><?= adminH($mailPreview["subject"]) ?></span>
+                        </div>
+                        <iframe title="Vista previa del comunicado" srcdoc="<?= adminH($mailPreview["html"]) ?>"></iframe>
+                    </div>
+                <?php endif; ?>
+
+                <div class="mail-history">
+                    <div class="panel-head">
+                        <h3>Historial de comunicados</h3>
+                        <span>Enviados, pendientes y fallidos</span>
+                    </div>
+
+                    <?php if (count($mailCampaigns) > 0): ?>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Asunto</th>
+                                        <th>Destinatarios</th>
+                                        <th>Enviados</th>
+                                        <th>Fallidos</th>
+                                        <th>Pendientes</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($mailCampaigns as $campaign): ?>
+                                        <?php
+                                            $pending = max(0, (int) $campaign["recipient_count"] - (int) $campaign["sent_count"] - (int) $campaign["failed_count"]);
+                                            $status = (string) $campaign["status"];
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= adminH($campaign["subject"]) ?></strong>
+                                                <p class="meta"><?= adminH(adminMailScopeLabel((string) $campaign["recipient_scope"])) ?> · <?= adminH($campaign["admin_nombre"]) ?></p>
+                                            </td>
+                                            <td><?= (int) $campaign["recipient_count"] ?></td>
+                                            <td><?= (int) $campaign["sent_count"] ?></td>
+                                            <td><?= (int) $campaign["failed_count"] ?></td>
+                                            <td><?= (int) $pending ?></td>
+                                            <td><span class="mail-status mail-status--<?= adminH($status) ?>"><?= adminH(adminMailStatusLabel($status)) ?></span></td>
+                                            <td><?= adminH(date("d/m/Y H:i", strtotime((string) $campaign["created_at"]))) ?></td>
+                                            <td>
+                                                <div class="mail-table-actions">
+                                                    <a class="admin-table-link" href="admin_dashboard.php?mail_campaign_id=<?= (int) $campaign["id"] ?>#comunicaciones">Ver detalle</a>
+                                                    <?php if ($pending > 0 && !in_array($status, ["cancelled", "completed"], true)): ?>
+                                                        <form method="POST">
+                                                            <input type="hidden" name="action" value="mail_process_batch">
+                                                            <input type="hidden" name="campaign_id" value="<?= (int) $campaign["id"] ?>">
+                                                            <button type="submit" data-confirm="Procesar otro lote de esta campana?">Procesar lote</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <?php if ((int) $campaign["sent_count"] === 0 && !in_array($status, ["cancelled", "completed", "partial_error"], true)): ?>
+                                                        <form method="POST">
+                                                            <input type="hidden" name="action" value="mail_cancel_campaign">
+                                                            <input type="hidden" name="campaign_id" value="<?= (int) $campaign["id"] ?>">
+                                                            <button type="submit" class="danger" data-confirm="Cancelar este comunicado?">Cancelar</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="meta">Aun no hay comunicados enviados.</p>
+                    <?php endif; ?>
+
+                    <?php if ($selectedMailCampaignId > 0 && count($selectedMailRecipients) > 0): ?>
+                        <div class="mail-recipient-detail">
+                            <div class="panel-head">
+                                <h3>Detalle de destinatarios</h3>
+                                <span>Campana #<?= (int) $selectedMailCampaignId ?></span>
+                            </div>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Correo</th>
+                                            <th>Estado</th>
+                                            <th>Intentos</th>
+                                            <th>Ultimo intento</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($selectedMailRecipients as $recipient): ?>
+                                            <tr>
+                                                <td><?= adminH($recipient["recipient_name"]) ?></td>
+                                                <td><?= adminH($recipient["recipient_email"]) ?></td>
+                                                <td><span class="mail-status mail-status--<?= adminH((string) $recipient["status"]) ?>"><?= adminH(adminMailStatusLabel((string) $recipient["status"])) ?></span></td>
+                                                <td><?= (int) $recipient["attempts"] ?></td>
+                                                <td><?= $recipient["last_attempt_at"] ? adminH(date("d/m/Y H:i", strtotime((string) $recipient["last_attempt_at"]))) : "Sin intento" ?></td>
+                                                <td><?= adminH(adminShort((string) ($recipient["error_message"] ?? ""), 90)) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </section>
 
             <section class="panel">

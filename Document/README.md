@@ -15,6 +15,7 @@ La plataforma conserva:
 - perfil;
 - analisis de riesgo;
 - panel de administracion;
+- centro de comunicaciones para enviar comunicados oficiales por correo;
 - recuperacion de contrasena por correo SMTP;
 - LandingPage con indicadores procesados desde XLSX oficiales.
 
@@ -26,6 +27,7 @@ La plataforma conserva:
 - `Python` para procesamiento, limpieza y visualizacion de datasets oficiales.
 - `pandas`, `matplotlib` y `openpyxl` para analisis de datos.
 - `PHPMailer` para recuperacion de contrasena con correo real.
+- `PHPMailer` para comunicados administrativos por correo.
 - `Composer` para dependencias PHP.
 
 ## Estructura principal
@@ -105,8 +107,52 @@ Funciones:
 - historial de modificaciones;
 - consola SQL;
 - estado del procesamiento de datos oficiales.
+- centro de comunicaciones por email.
 
 El panel admin ya no importa CSV Kaggle ni depende de tablas `dataset_*`.
+
+## Centro de Comunicaciones
+
+Archivos:
+
+- `PHP/admin_dashboard.php`
+- `PHP/mail_campaign_service.php`
+- `PHP/mailer.php`
+- `JS/admin.js`
+- `CSS/admin.css`
+
+Funciones:
+
+- crear comunicados oficiales con asunto y contenido HTML simple;
+- elegir destinatarios: usuarios activos, todos, administradores o usuario especifico;
+- ver una vista previa del correo antes de enviarlo;
+- encolar destinatarios en `mail_campaign_recipients`;
+- enviar correos por lotes pequenos;
+- guardar estado por destinatario;
+- consultar enviados, fallidos y pendientes;
+- cancelar una campana si aun no envio correos;
+- registrar actividad en `admin_historial`.
+
+El modulo reutiliza el SMTP centralizado en `PHP/mailer.php`. No guarda credenciales en el codigo: `config.local.php` sigue siendo el unico archivo privado con datos SMTP.
+
+### Procesar lotes
+
+Cuando un administrador confirma un comunicado, ATENEA crea la campana y procesa un primer lote de 10 correos. Si quedan pendientes, el admin puede pulsar `Procesar lote` desde el historial de campanas.
+
+Cada envio es individual: no se usa CC ni BCC masivo.
+
+### Revisar errores
+
+El detalle de una campana muestra:
+
+- destinatario;
+- correo;
+- estado;
+- intentos;
+- ultimo intento;
+- error devuelto por SMTP.
+
+Esto ayuda a detectar correos invalidos, limites SMTP o fallos temporales.
 
 ## Base de datos
 
@@ -124,6 +170,8 @@ Tablas funcionales principales:
 - `sesiones`
 - `password_resets`
 - `admin_historial`
+- `mail_campaigns`
+- `mail_campaign_recipients`
 
 ## Recuperacion de contrasena
 

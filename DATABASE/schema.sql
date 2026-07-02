@@ -110,3 +110,45 @@ CREATE TABLE IF NOT EXISTS `admin_historial` (
   CONSTRAINT `admin_historial_ibfk_1` FOREIGN KEY (`admin_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `admin_historial_ibfk_2` FOREIGN KEY (`target_user_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `mail_campaigns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `admin_id` int(11) NOT NULL,
+  `subject` varchar(180) NOT NULL,
+  `recipient_scope` enum('active','all','admins','specific') NOT NULL DEFAULT 'active',
+  `body_html` mediumtext DEFAULT NULL,
+  `body_text` mediumtext DEFAULT NULL,
+  `recipient_count` int(11) NOT NULL DEFAULT 0,
+  `sent_count` int(11) NOT NULL DEFAULT 0,
+  `failed_count` int(11) NOT NULL DEFAULT 0,
+  `status` enum('draft','queued','sending','completed','partial_error','failed','cancelled') NOT NULL DEFAULT 'queued',
+  `scheduled_at` datetime DEFAULT NULL,
+  `channel` varchar(20) NOT NULL DEFAULT 'email',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `admin_id` (`admin_id`),
+  KEY `status` (`status`),
+  CONSTRAINT `mail_campaigns_ibfk_1` FOREIGN KEY (`admin_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `mail_campaign_recipients` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `campaign_id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `recipient_name` varchar(100) DEFAULT NULL,
+  `recipient_email` varchar(150) NOT NULL,
+  `status` enum('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
+  `attempts` int(11) NOT NULL DEFAULT 0,
+  `error_message` text DEFAULT NULL,
+  `sent_at` datetime DEFAULT NULL,
+  `last_attempt_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_campaign_email` (`campaign_id`,`recipient_email`),
+  KEY `campaign_id` (`campaign_id`),
+  KEY `usuario_id` (`usuario_id`),
+  KEY `status` (`status`),
+  CONSTRAINT `mail_campaign_recipients_ibfk_1` FOREIGN KEY (`campaign_id`) REFERENCES `mail_campaigns` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `mail_campaign_recipients_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
