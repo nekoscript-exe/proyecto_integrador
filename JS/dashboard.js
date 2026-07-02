@@ -12,56 +12,6 @@ cards.forEach((card) => {
     });
 });
 
-const datasetSearch = document.querySelector("[data-dataset-search]");
-const datasetTableWrap = document.querySelector("[data-dataset-table-wrap]");
-const datasetTable = document.querySelector("[data-dataset-table]");
-const visibleCount = document.querySelector("[data-visible-count]");
-
-if (datasetSearch && datasetTable && datasetTableWrap) {
-    const rows = Array.from(datasetTable.querySelectorAll("tbody tr"));
-
-    const updateVisibleCount = () => {
-        if (!visibleCount) {
-            return;
-        }
-
-        const totalVisible = rows.filter((row) => row.style.display !== "none").length;
-        visibleCount.textContent = totalVisible.toString();
-    };
-
-    datasetSearch.addEventListener("input", () => {
-        const query = datasetSearch.value.trim().toLowerCase();
-
-        rows.forEach((row) => {
-            const match = row.textContent.toLowerCase().includes(query);
-            row.style.display = match ? "" : "none";
-        });
-
-        updateVisibleCount();
-    });
-
-    updateVisibleCount();
-}
-
-document.querySelectorAll("[data-column-focus]").forEach((button) => {
-    button.addEventListener("click", () => {
-        const column = button.getAttribute("data-column-focus");
-        if (!column || !datasetTableWrap) {
-            return;
-        }
-
-        const currentFocus = datasetTableWrap.getAttribute("data-focus-column");
-        const nextFocus = currentFocus === column ? "" : column;
-
-        if (nextFocus === "") {
-            datasetTableWrap.removeAttribute("data-focus-column");
-        } else {
-            datasetTableWrap.setAttribute("data-focus-column", nextFocus);
-            datasetTableWrap.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    });
-});
-
 const closeMobileNav = () => {
     document.body.classList.remove("dashboard-nav-open");
     navToggles.forEach((toggle) => {

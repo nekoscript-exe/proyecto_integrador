@@ -1,27 +1,37 @@
 # Atenea Python Analytics
 
-Esta carpeta contiene utilidades para analizar datos academicos fuera del dashboard PHP.
+Esta carpeta contiene las herramientas de analisis de datos para ATENEA. El enfoque oficial del proyecto usa los archivos XLSX ubicados en `DATASETS/` y deja fuera el flujo viejo de CSV/Kaggle.
 
-## Scripts disponibles
+## Fuente oficial
 
-### `process_official_datasets.py`
+La fuente principal es:
 
-Procesa los archivos XLSX reales ubicados en `DATASETS`, limpia sus encabezados y genera una salida lista para el LandingPage.
+- `DATASETS/2020-2021/`
+- `DATASETS/2021-2022/`
+- `DATASETS/2022-2023/`
+- `DATASETS/2023-2024/`
+- `DATASETS/2024-2025/`
+
+Cada periodo contiene reportes academicos oficiales en formato XLSX. Python se encarga de leerlos, limpiar encabezados, normalizar datos y generar salidas listas para la web.
+
+## `process_official_datasets.py`
+
+Procesa los XLSX oficiales y genera los archivos que consume el LandingPage.
 
 ```bash
 python3 PYTHON/process_official_datasets.py
 ```
 
-El flujo aplicado es:
+Flujo aplicado:
 
-1. Ingesta de XLSX oficiales por periodo escolar.
-2. Deteccion de encabezados reales dentro de hojas con formato institucional.
+1. Ingesta de archivos XLSX por periodo escolar.
+2. Deteccion de encabezados dentro de hojas con formato institucional.
 3. Limpieza de textos, municipios, columnas numericas y valores faltantes.
-4. Clasificacion de faltantes como `NULL` en el JSON cuando no hay dato valido.
+4. Clasificacion de faltantes como `NULL` cuando no hay dato valido.
 5. Calculo de indicadores ponderados por matricula: reprobacion, desercion, eficiencia terminal y riesgo.
 6. Generacion de CSV limpio, JSON para PHP, graficas PNG y notebook.
 
-Archivos generados:
+Archivos generados y conservados por ahora en el repositorio:
 
 - `DATASETS/processed/official_education_clean.csv`
 - `DATASETS/processed/landing_metrics.json`
@@ -31,7 +41,7 @@ Archivos generados:
 - `DATASETS/processed/charts/mapa_riesgo_municipal.png`
 - `Atenea_Datasets_Oficiales.ipynb`
 
-### `risk_analysis.py`
+## `risk_analysis.py`
 
 Lee la base de datos `atenea`, calcula una puntuacion de riesgo por estudiante y exporta un resumen JSON.
 
@@ -41,11 +51,9 @@ python3 PYTHON/risk_analysis.py --host localhost --user root --database atenea
 
 Si tienes `pymysql`, el script lo usa. Si no, intenta usar el cliente MySQL de XAMPP en `/opt/lampp/bin/mysql`.
 
-El cálculo replica la lógica usada en `PHP/analytics.php`, así que puede servir como base para futuros modelos, reportes o notebooks.
-
 ## Criterio de riesgo
 
-La puntuacion se calcula con una logica ponderada que da mas peso a los factores realmente academicos:
+La puntuacion se calcula con una logica ponderada que da mas peso a factores academicos y de habitos:
 
 - promedio;
 - asistencia;
@@ -59,33 +67,18 @@ La puntuacion se calcula con una logica ponderada que da mas peso a los factores
 - entrega de tareas;
 - condiciones de estudio y trabajo.
 
-La idea es que un solo indicador no dispare por si solo un riesgo alto. Atenea busca un resultado mas realista y estable, donde el riesgo alto aparece cuando se combinan varias señales de alerta.
+La idea es que un solo indicador no dispare por si solo un riesgo alto. ATENEA busca un resultado mas realista, donde el riesgo alto aparece cuando se combinan varias senales de alerta.
 
-### `process_student_dataset.py`
-
-Procesa un CSV de rendimiento estudiantil con el ciclo de vida de datos:
-
-1. Ingesta del CSV.
-2. Guardado raw en `dataset_estudiantes_raw`.
-3. Limpieza y normalizacion en `dataset_estudiantes_clean`.
-4. Calculo de metricas en `dataset_analysis_results`.
-5. Registro de la carga en `dataset_uploads`.
-
-Ejecutar solo como prueba, sin tocar la BD:
+## Dependencias sugeridas
 
 ```bash
-venv/bin/python PYTHON/process_student_dataset.py DATASET/Student_Performance_Dataset.csv --dry-run
+python3 -m venv venv
+source venv/bin/activate
+pip install pandas matplotlib openpyxl pymysql
 ```
 
-Procesar y guardar en MariaDB:
+Tambien puedes usar el archivo principal de dependencias si esta actualizado:
 
 ```bash
-venv/bin/python PYTHON/process_student_dataset.py DATASET/Student_Performance_Dataset.csv \
-  --host localhost \
-  --user root \
-  --database atenea \
-  --source-name Student_Performance_Dataset.csv \
-  --stored-path DATASET/Student_Performance_Dataset.csv
+pip install -r requirements.txt
 ```
-
-El panel administrador tambien puede ejecutar este proceso desde la interfaz, usando el boton para procesar el dataset incluido o subiendo un CSV nuevo.

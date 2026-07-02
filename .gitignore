@@ -14,9 +14,6 @@ __pycache__/
 # VS Code
 .vscode/
 
-# Datos temporales
-DATASET/uploads/
-
 # Archivos de información local
 INFO/
 

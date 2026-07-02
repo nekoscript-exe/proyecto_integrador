@@ -56,7 +56,35 @@ No subimos `vendor/` a GitHub. En el VPS se instala con Composer:
 composer install --no-dev --optimize-autoloader
 ```
 
-## 5. Actualizar codigo
+## 5. Preparar base de datos nueva
+
+Si el VPS esta limpio, importa el schema sin datos reales:
+
+```bash
+mysql -u atenea_user -p atenea < DATABASE/schema.sql
+```
+
+Si ya tienes la base funcionando, no ejecutes este comando sin respaldo.
+
+## 6. Procesar datasets oficiales
+
+ATENEA usa los XLSX oficiales de `DATASETS/`. Si necesitas regenerar el JSON, el CSV limpio y las graficas:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 PYTHON/process_official_datasets.py
+```
+
+Verifica que existan:
+
+```bash
+test -f DATASETS/processed/landing_metrics.json
+test -f DATASETS/processed/official_education_clean.csv
+```
+
+## 7. Actualizar codigo
 
 ```bash
 git pull origin main
@@ -65,7 +93,7 @@ composer install --no-dev --optimize-autoloader
 
 Si `config.local.php` no existe despues del pull, crealo de nuevo manualmente.
 
-## 6. Revisar permisos basicos
+## 8. Revisar permisos basicos
 
 ```bash
 sudo chown -R www-data:www-data /var/www/ateneanalyticsai.com
@@ -73,7 +101,7 @@ sudo find /var/www/ateneanalyticsai.com -type d -exec chmod 755 {} \;
 sudo find /var/www/ateneanalyticsai.com -type f -exec chmod 644 {} \;
 ```
 
-## 7. Probar sitio
+## 9. Probar sitio
 
 ```bash
 curl -I https://ateneanalyticsai.com
@@ -85,7 +113,7 @@ Debe responder algo parecido a:
 HTTP/1.1 200 OK
 ```
 
-## 8. Probar recuperacion de contrasena
+## 10. Probar recuperacion de contrasena
 
 1. Abre `https://ateneanalyticsai.com/PHP/forgot_password.php`.
 2. Escribe un correo registrado.
@@ -94,7 +122,7 @@ HTTP/1.1 200 OK
 5. Cambia la contrasena.
 6. Intenta usar el mismo enlace otra vez; debe fallar.
 
-## 9. Revisar logs si falla
+## 11. Revisar logs si falla
 
 ```bash
 sudo tail -50 /var/log/apache2/ateneanalyticsai_error.log

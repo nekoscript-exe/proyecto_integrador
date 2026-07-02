@@ -6,7 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once("conexion.php");
 require_once("analytics.php");
 require_once("security.php");
-require_once("dataset_service.php");
 
 // Solo admins pueden entrar aqui
 if (!isset($_SESSION["usuario_id"])) {
@@ -21,7 +20,6 @@ if (($_SESSION["usuario_rol"] ?? "usuario") !== "admin") {
 
 ateneaEnsureAllResults($conn);
 ateneaEnsureSecuritySchema($conn);
-ateneaDatasetEnsureSchema($conn);
 
 $adminId = (int) $_SESSION["usuario_id"];
 $feedback = "";
@@ -61,72 +59,26 @@ function adminShort(string $text, int $limit = 80): string
     return $text;
 }
 
-function adminProcessDatasetFile(mysqli $conn, int $adminId, string $filePath, string $originalName, string $storedPath): array
+function adminCountCsvRows(string $path): int
 {
-    global $host, $user, $pass, $db;
-
-    $projectRoot = dirname(__DIR__);
-    $pythonPath = $projectRoot . "/venv/bin/python";
-    $python = is_executable($pythonPath) ? $pythonPath : "python3";
-    $script = $projectRoot . "/PYTHON/process_student_dataset.py";
-
-    if (!function_exists("exec")) {
-        return [
-            "ok" => false,
-            "message" => "PHP no permite ejecutar Python desde el panel admin. Procesa el CSV desde terminal.",
-            "raw" => "",
-        ];
+    if (!is_file($path) || !is_readable($path)) {
+        return 0;
     }
 
-    $command = implode(" ", [
-        escapeshellarg($python),
-        escapeshellarg($script),
-        escapeshellarg($filePath),
-        "--host",
-        escapeshellarg($host),
-        "--user",
-        escapeshellarg($user),
-        "--password",
-        escapeshellarg($pass),
-        "--database",
-        escapeshellarg($db),
-        "--uploaded-by",
-        escapeshellarg((string) $adminId),
-        "--source-name",
-        escapeshellarg($originalName),
-        "--stored-path",
-        escapeshellarg($storedPath),
-    ]);
+    $lines = 0;
+    $handle = fopen($path, "r");
 
-    $output = [];
-    $exitCode = 0;
-    exec($command . " 2>&1", $output, $exitCode);
-    $rawOutput = implode("\n", $output);
-    $payload = json_decode($rawOutput, true);
-
-    if ($exitCode !== 0 || !is_array($payload) || empty($payload["ok"])) {
-        return [
-            "ok" => false,
-            "message" => is_array($payload) && isset($payload["error"])
-                ? (string) $payload["error"]
-                : "No fue posible procesar el dataset.",
-            "raw" => $rawOutput,
-        ];
+    if (!$handle) {
+        return 0;
     }
 
-    ateneaLogAdminAction(
-        $conn,
-        $adminId,
-        "Importar dataset",
-        null,
-        "Dataset {$originalName} procesado con " . (int) $payload["clean_rows"] . " filas limpias"
-    );
+    while (($row = fgets($handle)) !== false) {
+        $lines++;
+    }
 
-    return [
-        "ok" => true,
-        "message" => "Dataset procesado: " . (int) $payload["raw_rows"] . " filas raw, " . (int) $payload["clean_rows"] . " filas limpias.",
-        "payload" => $payload,
-    ];
+    fclose($handle);
+
+    return max(0, $lines - 1);
 }
 
 $tieneEstado = usuariosTieneEstadoColumna($conn);
@@ -257,55 +209,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    if ($action === "dataset_import") {
-        $file = $_FILES["dataset_csv"] ?? null;
-
-        if (!$file || ($file["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            $feedback = "Selecciona un archivo CSV valido.";
-        } else {
-            $extension = strtolower(pathinfo((string) $file["name"], PATHINFO_EXTENSION));
-            if ($extension !== "csv") {
-                $feedback = "El archivo debe ser CSV.";
-            } else {
-                $projectRoot = dirname(__DIR__);
-                $uploadDir = $projectRoot . "/DATASET/uploads";
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0775, true);
-                }
-
-                $safeBase = preg_replace('/[^A-Za-z0-9_.-]/', '_', pathinfo((string) $file["name"], PATHINFO_FILENAME));
-                $storedFileName = date("Ymd_His") . "_" . $safeBase . ".csv";
-                $targetPath = $uploadDir . "/" . $storedFileName;
-                $storedPath = "DATASET/uploads/" . $storedFileName;
-
-                if (!move_uploaded_file((string) $file["tmp_name"], $targetPath)) {
-                    $feedback = "No fue posible guardar el CSV.";
-                } else {
-                    $result = adminProcessDatasetFile($conn, $adminId, $targetPath, (string) $file["name"], $storedPath);
-                    $feedback = $result["message"];
-                }
-            }
-        }
-    }
-
-    if ($action === "dataset_import_sample") {
-        $projectRoot = dirname(__DIR__);
-        $samplePath = $projectRoot . "/DATASET/Student_Performance_Dataset.csv";
-
-        if (!is_file($samplePath)) {
-            $feedback = "No se encontro el dataset de ejemplo en DATASET.";
-        } else {
-            $result = adminProcessDatasetFile(
-                $conn,
-                $adminId,
-                $samplePath,
-                "Student_Performance_Dataset.csv",
-                "DATASET/Student_Performance_Dataset.csv"
-            );
-            $feedback = $result["message"];
-        }
-    }
-
     if ($action === "sql_exec") {
         $sql = trim($_POST["sql_text"] ?? "");
 
@@ -338,9 +241,7 @@ $totals = [
     "bloqueados" => 0,
     "encuestas" => 0,
     "resultados" => 0,
-    "recomendaciones" => 0,
-    "datasets" => 0,
-    "dataset_rows" => 0
+    "recomendaciones" => 0
 ];
 
 $statsSql = $tieneEstado
@@ -350,27 +251,46 @@ $statsSql = $tieneEstado
         (SELECT COUNT(*) FROM usuarios WHERE estado='bloqueado') AS bloqueados,
         (SELECT COUNT(*) FROM encuestas) AS encuestas,
         (SELECT COUNT(*) FROM resultados) AS resultados,
-        (SELECT COUNT(*) FROM recomendaciones) AS recomendaciones,
-        (SELECT COUNT(*) FROM dataset_uploads) AS datasets,
-        (SELECT COUNT(*) FROM dataset_estudiantes_clean) AS dataset_rows"
+        (SELECT COUNT(*) FROM recomendaciones) AS recomendaciones"
     : "SELECT
         (SELECT COUNT(*) FROM usuarios) AS usuarios,
         (SELECT COUNT(*) FROM usuarios WHERE rol='admin') AS admins,
         0 AS bloqueados,
         (SELECT COUNT(*) FROM encuestas) AS encuestas,
         (SELECT COUNT(*) FROM resultados) AS resultados,
-        (SELECT COUNT(*) FROM recomendaciones) AS recomendaciones,
-        (SELECT COUNT(*) FROM dataset_uploads) AS datasets,
-        (SELECT COUNT(*) FROM dataset_estudiantes_clean) AS dataset_rows";
+        (SELECT COUNT(*) FROM recomendaciones) AS recomendaciones";
 
 $stats = $conn->query($statsSql);
 if ($stats) {
     $totals = array_merge($totals, $stats->fetch_assoc());
 }
 
-$datasetUploads = ateneaDatasetUploads($conn, 8);
-$latestDataset = ateneaDatasetCurrentUpload($conn);
-$latestDatasetRows = $latestDataset ? ateneaDatasetRows($conn, (int) $latestDataset["id"], 8) : [];
+$projectRoot = dirname(__DIR__);
+$officialMetricsPath = $projectRoot . "/DATASETS/processed/landing_metrics.json";
+$officialCsvPath = $projectRoot . "/DATASETS/processed/official_education_clean.csv";
+$officialChartsPath = $projectRoot . "/DATASETS/processed/charts";
+$officialMetrics = [];
+$officialKpis = [];
+
+if (is_file($officialMetricsPath)) {
+    $decodedMetrics = json_decode((string) file_get_contents($officialMetricsPath), true);
+    if (is_array($decodedMetrics)) {
+        $officialMetrics = $decodedMetrics;
+        $officialKpis = is_array($officialMetrics["kpis"] ?? null) ? $officialMetrics["kpis"] : [];
+    }
+}
+
+$officialDatasetStats = [
+    "metrics_ready" => is_file($officialMetricsPath),
+    "clean_ready" => is_file($officialCsvPath),
+    "clean_rows" => adminCountCsvRows($officialCsvPath),
+    "charts_count" => is_dir($officialChartsPath) ? count(glob($officialChartsPath . "/*.png") ?: []) : 0,
+    "generated_at" => $officialMetrics["generated_at"] ?? null,
+    "periodo_inicial" => $officialKpis["periodo_inicial"] ?? "Sin dato",
+    "periodo_final" => $officialKpis["periodo_final"] ?? "Sin dato",
+    "archivos" => $officialKpis["archivos"] ?? 0,
+    "municipios" => $officialKpis["municipios"] ?? 0,
+];
 
 $users = [];
 $usersSql = $tieneEstado
@@ -443,14 +363,14 @@ if (ateneaTableExists($conn, 'admin_historial')) {
                 <small><?= adminH($_SESSION["usuario_correo"] ?? "") ?></small>
             </div>
             <button type="button" class="theme-toggle admin-theme-toggle" data-theme-toggle>Modo oscuro</button>
-            <a href="#datasets">Datasets</a>
+            <a href="#datasets">Datos oficiales</a>
             <a href="logout.php">Cerrar sesion</a>
         </aside>
 
         <main class="admin-main">
             <header>
                 <h2>Panel de Administracion</h2>
-                <p>Gestiona usuarios, datasets, roles, bloqueos y consultas SQL de base de datos.</p>
+                <p>Gestiona usuarios, datos oficiales, roles, bloqueos y consultas SQL de base de datos.</p>
             </header>
 
             <?php if ($feedback !== ""): ?>
@@ -464,129 +384,56 @@ if (ateneaTableExists($conn, 'admin_historial')) {
                 <article><small>Encuestas</small><strong><?= (int) $totals["encuestas"] ?></strong></article>
                 <article><small>Resultados</small><strong><?= (int) $totals["resultados"] ?></strong></article>
                 <article><small>Recomendaciones</small><strong><?= (int) $totals["recomendaciones"] ?></strong></article>
-                <article><small>Datasets</small><strong><?= (int) $totals["datasets"] ?></strong></article>
-                <article><small>Filas clean</small><strong><?= (int) $totals["dataset_rows"] ?></strong></article>
+                <article><small>Archivos oficiales</small><strong><?= (int) $officialDatasetStats["archivos"] ?></strong></article>
+                <article><small>Filas limpias</small><strong><?= (int) $officialDatasetStats["clean_rows"] ?></strong></article>
             </section>
 
             <section class="panel dataset-admin-panel" id="datasets">
                 <div class="panel-head">
                     <div>
-                        <h3>Datasets y ciclo de vida de datos</h3>
-                        <p class="meta">Importa CSV, guarda raw, limpia datos y genera metricas para graficas.</p>
+                        <h3>Datos oficiales y ciclo de vida</h3>
+                        <p class="meta">Los XLSX oficiales se procesan con Python, se limpian y alimentan las graficas del LandingPage.</p>
                     </div>
-                    <span><?= count($datasetUploads) ?> cargas recientes</span>
+                    <span><?= $officialDatasetStats["metrics_ready"] ? "Procesado" : "Pendiente" ?></span>
+                </div>
+
+                <div class="dataset-admin-summary">
+                    <article>
+                        <small>Periodo</small>
+                        <strong><?= adminH($officialDatasetStats["periodo_inicial"]) ?> - <?= adminH($officialDatasetStats["periodo_final"]) ?></strong>
+                    </article>
+                    <article>
+                        <small>Archivos XLSX</small>
+                        <strong><?= (int) $officialDatasetStats["archivos"] ?></strong>
+                    </article>
+                    <article>
+                        <small>Municipios</small>
+                        <strong><?= (int) $officialDatasetStats["municipios"] ?></strong>
+                    </article>
+                    <article>
+                        <small>Graficas</small>
+                        <strong><?= (int) $officialDatasetStats["charts_count"] ?></strong>
+                    </article>
                 </div>
 
                 <div class="dataset-admin-grid">
-                    <form method="POST" enctype="multipart/form-data" class="dataset-upload-form">
-                        <input type="hidden" name="action" value="dataset_import">
-                        <label>Importar CSV nuevo</label>
-                        <input type="file" name="dataset_csv" accept=".csv,text/csv" required>
-                        <button type="submit" data-confirm="Procesar este dataset CSV?">Procesar dataset</button>
-                    </form>
+                    <article class="dataset-upload-form">
+                        <label>CSV limpio</label>
+                        <p class="meta"><?= $officialDatasetStats["clean_ready"] ? "Disponible en DATASETS/processed/official_education_clean.csv" : "Pendiente de generar con Python." ?></p>
+                        <strong><?= (int) $officialDatasetStats["clean_rows"] ?> filas procesadas</strong>
+                    </article>
 
-                    <form method="POST" class="dataset-upload-form">
-                        <input type="hidden" name="action" value="dataset_import_sample">
-                        <label>Dataset incluido</label>
-                        <p class="meta">Usa Student_Performance_Dataset.csv desde la carpeta DATASET.</p>
-                        <button type="submit" data-confirm="Procesar el dataset incluido?">Procesar ejemplo</button>
-                    </form>
+                    <article class="dataset-upload-form">
+                        <label>Metricas del LandingPage</label>
+                        <p class="meta"><?= $officialDatasetStats["metrics_ready"] ? "JSON listo para mostrar indicadores reales." : "No se encontro landing_metrics.json." ?></p>
+                        <strong><?= $officialDatasetStats["generated_at"] ? adminH(date("d/m/Y H:i", strtotime((string) $officialDatasetStats["generated_at"]))) : "Sin fecha" ?></strong>
+                    </article>
                 </div>
 
-                <?php if ($latestDataset): ?>
-                    <div class="dataset-admin-summary">
-                        <article>
-                            <small>Ultima carga</small>
-                            <strong><?= adminH($latestDataset["nombre_original"]) ?></strong>
-                        </article>
-                        <article>
-                            <small>Raw</small>
-                            <strong><?= (int) $latestDataset["filas_raw"] ?></strong>
-                        </article>
-                        <article>
-                            <small>Clean</small>
-                            <strong><?= (int) $latestDataset["filas_clean"] ?></strong>
-                        </article>
-                        <article>
-                            <small>Promedio general</small>
-                            <strong><?= adminH($latestDataset["promedio_general"] ?? "Sin dato") ?>%</strong>
-                        </article>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (count($datasetUploads) > 0): ?>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Dataset</th>
-                                    <th>Estado</th>
-                                    <th>Raw</th>
-                                    <th>Clean</th>
-                                    <th>Aprobados</th>
-                                    <th>Fecha</th>
-                                    <th>Archivo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($datasetUploads as $upload): ?>
-                                    <tr>
-                                        <td><?= adminH($upload["nombre_original"]) ?></td>
-                                        <td><?= adminH($upload["estado"]) ?></td>
-                                        <td><?= (int) $upload["filas_raw"] ?></td>
-                                        <td><?= (int) $upload["filas_clean"] ?></td>
-                                        <td><?= adminH($upload["porcentaje_aprobados"] ?? "Sin dato") ?>%</td>
-                                        <td><?= adminH(date("d/m/Y H:i", strtotime($upload["fecha_carga"]))) ?></td>
-                                        <td>
-                                            <?php if (($upload["estado"] ?? "") === "completado"): ?>
-                                                <a class="admin-table-link" href="download_dataset.php?dataset=<?= (int) $upload["id"] ?>">Descargar</a>
-                                            <?php else: ?>
-                                                <span class="meta">No disponible</span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php else: ?>
-                    <p class="meta">Aun no hay datasets cargados. Procesa el ejemplo para iniciar la parte de datos.</p>
-                <?php endif; ?>
-
-                <?php if (count($latestDatasetRows) > 0): ?>
-                    <div class="panel-head dataset-preview-head">
-                        <h3>Muestra del dataset limpio</h3>
-                        <span><?= count($latestDatasetRows) ?> filas</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Edad</th>
-                                    <th>Genero</th>
-                                    <th>Estudio</th>
-                                    <th>Asistencia</th>
-                                    <th>Final</th>
-                                    <th>Nivel</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($latestDatasetRows as $row): ?>
-                                    <tr>
-                                        <td><?= adminH($row["student_id"]) ?></td>
-                                        <td><?= (int) $row["age"] ?></td>
-                                        <td><?= adminH($row["gender"]) ?></td>
-                                        <td><?= adminH($row["study_hours_per_day"]) ?> h</td>
-                                        <td><?= adminH($row["attendance_percentage"]) ?>%</td>
-                                        <td><?= adminH($row["final_percentage"]) ?>%</td>
-                                        <td><?= adminH($row["performance_level"]) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
+                <p class="meta">
+                    Para actualizar esta informacion, ejecuta desde terminal:
+                    <code>python3 PYTHON/process_official_datasets.py</code>
+                </p>
             </section>
 
             <section class="panel">

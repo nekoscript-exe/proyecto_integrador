@@ -1,184 +1,121 @@
 # Atenea
 
-Atenea es una plataforma web orientada al ODS 4, enfocada en la recopilacion y analisis de datos academicos para detectar riesgo estudiantil, mostrar resultados utiles y dar seguimiento tanto al usuario como al administrador del sistema.
+ATENEA es una plataforma web orientada al ODS 4. Combina registro de estudiantes, encuesta academica, analisis de riesgo y visualizacion de datos oficiales para explicar problemas de permanencia, reprobacion y desempeno educativo.
 
-## Proposito del proyecto
+## Enfoque actual
 
-El sistema permite:
+El proyecto migro definitivamente al uso de `DATASETS/` oficiales. El flujo viejo basado en CSV/Kaggle fue retirado para que la pagina tenga un enfoque mas cercano a ciencia de datos, procesamiento y analisis educativo real.
 
-- registrar estudiantes y su informacion academica;
-- guardar encuestas con variables de habitos, rendimiento y contexto;
-- calcular una puntuacion de riesgo academico;
-- mostrar un dashboard funcional con feed social, ranking, perfil y analisis;
-- administrar usuarios con un panel de control separado;
-- recuperar contrasenas mediante token temporal;
-- dejar preparada una futura capa de asistencia con IA.
+La plataforma conserva:
 
-La idea central es convertir datos escolares en una experiencia util, clara y escalable.
+- registro e inicio de sesion;
+- encuesta academica;
+- dashboard de usuario;
+- ranking;
+- perfil;
+- analisis de riesgo;
+- panel de administracion;
+- recuperacion de contrasena por correo SMTP;
+- LandingPage con indicadores procesados desde XLSX oficiales.
 
-## Tecnologias utilizadas
+## Tecnologias
 
-- `PHP` como lenguaje principal del backend.
-- `MariaDB / MySQL` como motor de base de datos.
-- `HTML` y `CSS` para la interfaz.
-- `JavaScript` para validaciones y mejoras de experiencia.
-- `Python 3.12` para analisis externo de datos.
-- `PyMySQL` dentro de un entorno virtual `venv`.
-- `XAMPP / LAMP` como entorno local de desarrollo.
+- `PHP` para backend y renderizado de vistas.
+- `MariaDB / MySQL` para la base de datos de usuarios, encuestas, resultados y auditoria.
+- `HTML`, `CSS` y `JavaScript` para interfaz y experiencia de usuario.
+- `Python` para procesamiento, limpieza y visualizacion de datasets oficiales.
+- `pandas`, `matplotlib` y `openpyxl` para analisis de datos.
+- `PHPMailer` para recuperacion de contrasena con correo real.
+- `Composer` para dependencias PHP.
 
-## Estructura general
+## Estructura principal
 
-- [PHP/](</opt/lampp/htdocs/proyecto_integrador/PHP>) contiene la logica principal.
-- [VIEWS/](</opt/lampp/htdocs/proyecto_integrador/VIEWS>) contiene las vistas internas del dashboard.
-- [CSS/](</opt/lampp/htdocs/proyecto_integrador/CSS>) contiene los estilos.
-- [JS/](</opt/lampp/htdocs/proyecto_integrador/JS>) contiene validaciones e interacciones.
-- [DATABASE/](</opt/lampp/htdocs/proyecto_integrador/DATABASE>) contiene el SQL y la documentacion de la BD.
-- [PYTHON/](</opt/lampp/htdocs/proyecto_integrador/PYTHON>) contiene el analisis externo.
-- [IMG/](</opt/lampp/htdocs/proyecto_integrador/IMG>) contiene el branding oficial.
+- `PHP/`: controladores principales, login, registro, dashboard, admin, correo y seguridad.
+- `VIEWS/`: secciones internas del dashboard.
+- `CSS/`: estilos de LandingPage, dashboard, formularios, login, registro y admin.
+- `JS/`: interacciones de interfaz, tema, formularios y navegacion.
+- `DATASETS/`: fuente oficial de datos academicos en XLSX y salidas procesadas.
+- `PYTHON/`: scripts de analisis y limpieza.
+- `DATABASE/`: dumps y schema limpio.
+- `Document/`: documentacion del proyecto.
+- `IMG/`: logo y favicon.
 
-## Flujo principal del sistema
+## Datos oficiales
 
-1. El usuario entra a la LandingPage.
-2. Revisa la propuesta del proyecto, la problematica y las estadisticas.
-3. Se registra o inicia sesion.
-4. Completa la encuesta academica.
-5. El sistema guarda usuario, encuesta y analisis.
-6. El usuario entra al dashboard y consulta su feed, ranking, perfil, diagnostico, plan y actividad.
-7. Si entra un administrador, se abre un panel separado con control total.
+La fuente oficial se conserva completa en:
 
-## Landing Page
+- `DATASETS/2020-2021/`
+- `DATASETS/2021-2022/`
+- `DATASETS/2022-2023/`
+- `DATASETS/2023-2024/`
+- `DATASETS/2024-2025/`
 
-Archivo principal:
+El procesamiento genera:
 
-- [PHP/LandingPage.php](/opt/lampp/htdocs/proyecto_integrador/PHP/LandingPage.php)
+- `DATASETS/processed/official_education_clean.csv`
+- `DATASETS/processed/landing_metrics.json`
+- `DATASETS/processed/charts/*.png`
+- `Atenea_Datasets_Oficiales.ipynb`
 
-Funciones principales:
+Para regenerar las salidas:
 
-- presenta el proyecto de forma visual y clara;
-- usa scroll suave hacia secciones como inicio, problematica, objetivos y estadisticas;
-- muestra datos reales de la base de datos;
-- integra branding con logo y favicon oficiales;
-- ofrece acceso a login, registro y formulario.
+```bash
+python3 PYTHON/process_official_datasets.py
+```
 
-La Landing no es estatica: toma datos reales como:
+## LandingPage
 
-- total de estudiantes;
-- total de encuestas;
-- promedio academico global;
-- perfiles con riesgo alto.
+Archivo:
 
-## Registro y encuesta
+- `PHP/LandingPage.php`
 
-Archivos:
+La LandingPage muestra datos reales procesados desde `DATASETS/processed/landing_metrics.json`, incluyendo KPIs, graficas y explicacion del ciclo de vida de datos. Si el JSON no existe, la pagina debe seguir cargando y mostrar valores de respaldo.
 
-- [PHP/form.php](/opt/lampp/htdocs/proyecto_integrador/PHP/form.php)
-- [PHP/register.php](/opt/lampp/htdocs/proyecto_integrador/PHP/register.php)
-- [JS/form.js](/opt/lampp/htdocs/proyecto_integrador/JS/form.js)
-- [JS/register.js](/opt/lampp/htdocs/proyecto_integrador/JS/register.js)
+## Dashboard de usuario
 
-Caracteristicas:
+Archivo:
 
-- formulario multi-step;
-- validacion de progreso;
-- registro de datos de encuesta;
-- creacion del usuario en la misma transaccion;
-- validacion de nombre completo con nombre(s) y dos apellidos;
-- seleccion controlada de carreras;
-- opcion `Otra` para carrera personalizada.
+- `PHP/dashboard.php`
 
-El formulario no solo recolecta datos: alimenta el motor de analisis academico.
+Vistas:
 
-## Autenticacion
+- `VIEWS/home.php`
+- `VIEWS/profile.php`
+- `VIEWS/ranking.php`
+- `VIEWS/analysis.php`
+- `VIEWS/plan.php`
+- `VIEWS/community.php`
+- `VIEWS/activity.php`
+- `VIEWS/assistant.php`
 
-Archivos:
-
-- [PHP/login.php](/opt/lampp/htdocs/proyecto_integrador/PHP/login.php)
-- [PHP/logout.php](/opt/lampp/htdocs/proyecto_integrador/PHP/logout.php)
-
-Funciones principales:
-
-- inicio de sesion con `password_verify`;
-- redireccion por rol;
-- bloqueo de cuentas;
-- registro de sesion de acceso;
-- mensajes de error y exito;
-- enlace a recuperacion de contrasena.
-
-## Recuperacion de contrasena
-
-Archivos:
-
-- [PHP/forgot_password.php](/opt/lampp/htdocs/proyecto_integrador/PHP/forgot_password.php)
-- [PHP/reset_password.php](/opt/lampp/htdocs/proyecto_integrador/PHP/reset_password.php)
-- [PHP/security.php](/opt/lampp/htdocs/proyecto_integrador/PHP/security.php)
-
-Flujo:
-
-1. El usuario escribe su correo.
-2. Se genera un token temporal de un solo uso.
-3. Se guarda en `password_resets`.
-4. Se envia un enlace temporal.
-5. El usuario define una nueva contrasena.
-6. El token se marca como usado.
-
-## Dashboard del usuario
-
-Archivos:
-
-- [PHP/dashboard.php](/opt/lampp/htdocs/proyecto_integrador/PHP/dashboard.php)
-- [VIEWS/home.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/home.php)
-- [VIEWS/profile.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/profile.php)
-- [VIEWS/ranking.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/ranking.php)
-- [VIEWS/analysis.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/analysis.php)
-- [VIEWS/plan.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/plan.php)
-- [VIEWS/community.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/community.php)
-- [VIEWS/activity.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/activity.php)
-- [VIEWS/assistant.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/assistant.php)
-
-Secciones disponibles:
-
-- Inicio: feed social con tarjetas clicables de otros usuarios.
-- Ranking: lista de estudiantes ordenada por desempeno.
-- Perfil: informacion personal y academica del usuario o de otro estudiante.
-- Analisis: lectura del riesgo academico.
-- Plan: recomendaciones de mejora.
-- Comunidad: resumen de estadisticas del grupo.
-- Actividad: historial de sesiones.
-- Asistente IA: vista de proximos pasos para chat academico.
-
-El dashboard esta pensado para no sentirse cerrado: la navegacion lateral da acceso a las secciones principales y el contenido central cambia segun la vista.
+El dashboard mantiene la experiencia social y academica: feed, ranking, perfil, diagnostico, plan de mejora, actividad y anuncio del asistente IA.
 
 ## Dashboard de administracion
 
-Archivo principal:
+Archivo:
 
-- [PHP/admin_dashboard.php](/opt/lampp/htdocs/proyecto_integrador/PHP/admin_dashboard.php)
+- `PHP/admin_dashboard.php`
 
 Funciones:
 
-- edicion de usuarios;
-- cambio de rol entre `usuario` y `admin`;
-- bloqueo y desbloqueo de cuentas;
-- eliminacion de usuarios y datos asociados;
+- gestion de usuarios;
+- cambio de rol;
+- bloqueo y desbloqueo;
+- eliminacion de usuarios;
 - historial de modificaciones;
-- consola SQL para administracion avanzada;
-- confirmacion previa de acciones peligrosas.
+- consola SQL;
+- estado del procesamiento de datos oficiales.
 
-El admin tiene un panel separado del usuario normal y acceso a control total del sistema.
+El panel admin ya no importa CSV Kaggle ni depende de tablas `dataset_*`.
 
 ## Base de datos
 
-Archivo principal:
+Archivos:
 
-- [DATABASE/atenea.sql](/opt/lampp/htdocs/proyecto_integrador/DATABASE/atenea.sql)
+- `DATABASE/atenea.sql`: dump historico completo. No modificar por ahora.
+- `DATABASE/schema.sql`: estructura limpia sin datos reales.
 
-Documentacion adicional:
-
-- [DATABASE/README.md](/opt/lampp/htdocs/proyecto_integrador/DATABASE/README.md)
-- [DATABASE/README.txt](/opt/lampp/htdocs/proyecto_integrador/DATABASE/README.txt)
-- [DATABASE/admin_migration.sql](/opt/lampp/htdocs/proyecto_integrador/DATABASE/admin_migration.sql)
-
-Tablas principales:
+Tablas funcionales principales:
 
 - `usuarios`
 - `encuestas`
@@ -188,142 +125,53 @@ Tablas principales:
 - `password_resets`
 - `admin_historial`
 
-### Rol de cada tabla
+## Recuperacion de contrasena
 
-- `usuarios`: guarda identidad, correo, edad, carrera, rol y estado.
-- `encuestas`: guarda respuestas academicas y de habitos.
-- `resultados`: almacena la puntuacion y nivel de riesgo.
-- `recomendaciones`: guarda sugerencias personalizadas.
-- `sesiones`: registra accesos al sistema.
-- `password_resets`: tokens temporales de recuperacion.
-- `admin_historial`: auditoria de acciones administrativas.
+Archivos:
 
-## Motor de analisis academico
+- `PHP/forgot_password.php`
+- `PHP/reset_password.php`
+- `PHP/security.php`
+- `PHP/mailer.php`
 
-La logica de riesgo esta duplicada de forma consistente en PHP y Python para que el sistema pueda funcionar en la web y tambien fuera de ella.
+El flujo usa token seguro, expiracion, uso unico y envio por Gmail SMTP mediante PHPMailer. Las credenciales viven en `config.local.php`, que no debe subirse a GitHub.
 
-### En PHP
+## Instalacion local minima
 
-- [PHP/analytics.php](/opt/lampp/htdocs/proyecto_integrador/PHP/analytics.php)
+1. Crear `config.local.php` basado en `config.local.example.php`.
+2. Instalar dependencias PHP:
 
-### En Python
+```bash
+composer install
+```
 
-- [PYTHON/risk_analysis.py](/opt/lampp/htdocs/proyecto_integrador/PYTHON/risk_analysis.py)
-- [PYTHON/README.md](/opt/lampp/htdocs/proyecto_integrador/PYTHON/README.md)
+3. Crear la base de datos usando `DATABASE/schema.sql` o importar el dump historico si se requiere un entorno con datos.
+4. Regenerar datos oficiales si hace falta:
 
-Variables que influyen en el calculo:
+```bash
+python3 PYTHON/process_official_datasets.py
+```
 
-- promedio;
-- materias reprobadas;
-- asistencia;
-- horas de estudio;
-- horas de sueno;
-- uso de redes;
-- nivel de estres;
-- desmotivacion;
-- administracion del tiempo;
-- entrega de tareas;
-- acceso a internet;
-- espacio de estudio;
-- si trabaja o no.
+## Produccion
 
-El resultado final clasifica a cada estudiante en:
+En produccion debe bastar con:
 
-- `Bajo`
-- `Medio`
-- `Alto`
+1. clonar el repositorio;
+2. crear `config.local.php`;
+3. ejecutar `composer install --no-dev --optimize-autoloader`;
+4. importar `DATABASE/schema.sql`;
+5. revisar que `DATASETS/processed/landing_metrics.json` exista;
+6. probar login, registro, dashboard, admin y recuperacion de contrasena.
 
-## Python y analisis externo
+## Archivos privados
 
-El script de Python:
+No deben versionarse:
 
-- lee la base de datos;
-- calcula riesgo por estudiante;
-- genera un resumen JSON;
-- identifica perfiles con mayor riesgo;
-- lista mejores promedios.
+- `config.local.php`
+- `vendor/`
+- `venv/`
+- `.vscode/`
 
-Esto deja lista la base para futuras capas de visualizacion, reportes automaticos o modelos mas avanzados.
+## Nota de mantenimiento
 
-## Futuro asistente con IA
-
-La vista de IA ya fue preparada en:
-
-- [VIEWS/assistant.php](/opt/lampp/htdocs/proyecto_integrador/VIEWS/assistant.php)
-
-La evolucion prevista es:
-
-1. Encuesta -> Riesgo academico
-2. Encuesta -> IA
-3. Chat academico
-4. Memoria academica
-
-Modelo previsto:
-
-- `ollama pull qwen3:8b`
-
-Casos de uso futuros:
-
-- consejos para subir promedio;
-- explicaciones academicas;
-- ayuda con Python;
-- organizacion del tiempo;
-- respuestas con contexto real de la BD.
-
-## Branding
-
-Archivos usados:
-
-- [IMG/logo.png](/opt/lampp/htdocs/proyecto_integrador/IMG/logo.png)
-- [IMG/favicon.png](/opt/lampp/htdocs/proyecto_integrador/IMG/favicon.png)
-
-El logo se usa donde hay espacio suficiente para lucirlo con claridad. El favicon se usa en zonas compactas como sidebar o pestañas del navegador. Esto evita problemas de tamaño, sobreposicion y saturacion visual.
-
-## Estilo visual
-
-La interfaz usa una paleta consistente:
-
-- azul noche como base;
-- cyan como acento principal;
-- paneles oscuros translucidos;
-- tarjetas con bordes suaves;
-- transiciones discretas;
-- scroll suave;
-- diseño moderno y minimalista.
-
-La intencion es que el sistema se vea serio, limpio y comodo de usar.
-
-## Seguridad y mantenimiento
-
-Puntos ya contemplados:
-
-- contrasenas hasheadas;
-- consultas preparadas en las rutas criticas;
-- control por rol;
-- bloqueo de cuentas;
-- tokens temporales para recuperar acceso;
-- auditoria administrativa;
-- confirmacion de acciones peligrosas.
-
-Puntos a revisar en mantenimiento futuro:
-
-- limpiar archivos heredados o de prueba;
-- reforzar la consola SQL si se piensa usar en produccion;
-- normalizar algunos datos antiguos de usuarios ya cargados en la BD.
-
-## Estado actual del proyecto
-
-Atenea ya tiene:
-
-- landing funcional;
-- registro con encuesta;
-- login;
-- dashboard de usuario;
-- dashboard de admin;
-- recuperación de contraseña;
-- analisis academico;
-- historial de sesiones;
-- estructura lista para IA futura.
-
-En resumen, el proyecto ya tiene una base solida y una ruta clara de crecimiento.
-
+El enfoque del proyecto ahora es claro: la aplicacion web es el medio para presentar analisis educativo, pero el valor central esta en el procesamiento de datos oficiales y en la interpretacion del riesgo academico.

@@ -360,10 +360,6 @@ button {
     overflow-wrap: anywhere;
 }
 
-.dataset-preview-head {
-    margin-top: 18px;
-}
-
 .admin-table-link {
     color: var(--accent);
     font-weight: 700;
