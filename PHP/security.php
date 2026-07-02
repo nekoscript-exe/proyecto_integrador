@@ -162,5 +162,22 @@ function ateneaGetPasswordReset(mysqli $conn, string $token): ?array
 
 function ateneaConsumePasswordReset(mysqli $conn, string $token): ?array
 {
-    return ateneaGetPasswordReset($conn, $token);
+    $reset = ateneaGetPasswordReset($conn, $token);
+
+    if (!$reset) {
+        return null;
+    }
+
+    $stmt = $conn->prepare("UPDATE password_resets SET used_at = NOW() WHERE id = ? LIMIT 1");
+
+    if (!$stmt) {
+        return null;
+    }
+
+    $resetId = (int) $reset["id"];
+    $stmt->bind_param("i", $resetId);
+    $stmt->execute();
+    $stmt->close();
+
+    return $reset;
 }

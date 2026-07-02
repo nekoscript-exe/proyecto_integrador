@@ -1,12 +1,15 @@
 <?php
 
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "atenea";
+$configPath = __DIR__ . "/../config.local.php";
+
+if (!is_file($configPath)) {
+    die("Falta config.local.php. Copia config.local.example.php y completa tus datos locales.");
+}
+
+require_once $configPath;
 
 /** @var mysqli $conn */
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
 if ($conn->connect_error) {
     die("Error de conexión: " . $conn->connect_error);

@@ -1,6 +1,12 @@
 # Entorno virtual
 venv/
 
+# Dependencias instaladas por Composer
+vendor/
+
+# Configuracion local privada
+config.local.php
+
 # Caché de Python
 __pycache__/
 *.pyc

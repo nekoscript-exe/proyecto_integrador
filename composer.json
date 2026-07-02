@@ -1,0 +1,8 @@
+{
+    "name": "atenea/proyecto-integrador",
+    "description": "Plataforma Atenea para analisis academico y recuperacion de contrasena por SMTP.",
+    "license": "proprietary",
+    "require": {
+        "phpmailer/phpmailer": "^7.1"
+    }
+}

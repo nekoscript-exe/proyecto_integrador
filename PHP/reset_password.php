@@ -37,13 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt->execute();
             $stmt->close();
 
-            $stmt = $conn->prepare("UPDATE password_resets SET used_at = NOW() WHERE id = ? LIMIT 1");
-            if ($stmt) {
-                $resetId = (int) $tokenData["id"];
-                $stmt->bind_param("i", $resetId);
-                $stmt->execute();
-                $stmt->close();
-            }
+            ateneaConsumePasswordReset($conn, $token);
 
             header("Location: login.php?reset=ok");
             exit();

@@ -3,6 +3,7 @@ session_start();
 
 require_once("conexion.php");
 require_once("security.php");
+require_once("mailer.php");
 
 if (!isset($conn)) {
     die("Error: conexión no encontrada.");
@@ -11,14 +12,14 @@ if (!isset($conn)) {
 ateneaEnsureSecuritySchema($conn);
 
 $message = "";
-$debugLink = "";
-$showDebugLink = false;
+$messageType = "error";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $correo = trim($_POST["correo"] ?? "");
 
     if ($correo === "" || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         $message = "Escribe un correo válido.";
+        $messageType = "error";
     } else {
         // Buscamos la cuenta y luego generamos el enlace de recuperacion
         $stmt = $conn->prepare("SELECT id, nombre, correo FROM usuarios WHERE correo = ? LIMIT 1");
@@ -34,25 +35,41 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($user) {
                 $reset = ateneaCreatePasswordReset($conn, (int) $user["id"]);
                 if ($reset) {
-                    $debugLink = "reset_password.php?token=" . urlencode($reset["token"]);
-                    $absoluteLink = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off" ? "https" : "http")
-                        . "://" . ($_SERVER["HTTP_HOST"] ?? "localhost")
-                        . rtrim(dirname($_SERVER["SCRIPT_NAME"] ?? "/PHP/forgot_password.php"), "/")
-                        . "/reset_password.php?token=" . urlencode($reset["token"]);
+                    $absoluteLink = rtrim(APP_URL, "/") . "/PHP/reset_password.php?token=" . urlencode($reset["token"]);
+                    $safeName = htmlspecialchars((string) $user["nombre"], ENT_QUOTES, "UTF-8");
+                    $safeLink = htmlspecialchars($absoluteLink, ENT_QUOTES, "UTF-8");
+                    $htmlBody = "
+                        <div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #0d1724;\">
+                            <h2>Restablecer contrasena en Atenea</h2>
+                            <p>Hola {$safeName},</p>
+                            <p>Recibimos una solicitud para cambiar la contrasena de tu cuenta.</p>
+                            <p>
+                                <a href=\"{$safeLink}\" style=\"display: inline-block; padding: 12px 18px; background: #00d9ff; color: #08111f; border-radius: 10px; text-decoration: none; font-weight: 700;\">
+                                    Cambiar contrasena
+                                </a>
+                            </p>
+                            <p>Este enlace expira en 1 hora y solo puede usarse una vez.</p>
+                            <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
+                        </div>
+                    ";
+                    $textBody = "Hola " . $user["nombre"] . ",\n\n"
+                        . "Usa este enlace para restablecer tu contrasena:\n"
+                        . $absoluteLink . "\n\n"
+                        . "Este enlace expira en 1 hora y solo puede usarse una vez.\n\n"
+                        . "Si no solicitaste este cambio, puedes ignorar este correo.";
 
-                    $showDebugLink = in_array(($_SERVER["HTTP_HOST"] ?? ""), ["localhost", "127.0.0.1"], true)
-                        || str_contains(($_SERVER["HTTP_HOST"] ?? ""), ".local")
-                        || str_contains(($_SERVER["SERVER_NAME"] ?? ""), "localhost");
-
-                    @mail(
+                    ateneaSendMail(
                         $user["correo"],
+                        $user["nombre"],
                         "Atenea - Restablecer contrasena",
-                        "Hola " . $user["nombre"] . ",\n\nUsa este enlace para restablecer tu contrasena:\n" . $absoluteLink . "\n\nEste enlace expira en 1 hora."
+                        $htmlBody,
+                        $textBody
                     );
                 }
             }
 
-            $message = "Si el correo existe en la plataforma, te mostramos el enlace de recuperacion.";
+            $message = "Si el correo existe en la plataforma, enviaremos un enlace de recuperacion.";
+            $messageType = "success";
         }
     }
 }
@@ -89,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <p class="login-text">Escribe tu correo registrado y te guiaremos con un enlace seguro.</p>
 
                 <?php if ($message !== ""): ?>
-                    <div class="error-box"><?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?></div>
+                    <div class="<?= $messageType === "success" ? "success-box" : "error-box" ?>"><?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?></div>
                 <?php endif; ?>
 
                 <form method="POST">
@@ -99,13 +116,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     <button type="submit" class="login-btn">Enviar enlace</button>
                 </form>
-
-                <?php if ($showDebugLink && $debugLink !== ""): ?>
-                    <div class="reset-link-box">
-                        <p>Enlace temporal generado para desarrollo local:</p>
-                        <a href="<?= htmlspecialchars($debugLink, ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($debugLink, ENT_QUOTES, "UTF-8") ?></a>
-                    </div>
-                <?php endif; ?>
 
                 <div class="extra-links">
                     <a href="login.php">Volver al inicio de sesión</a>
